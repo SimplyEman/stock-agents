@@ -94,9 +94,7 @@ class StatementSeries(BaseModel):
         if filed_before is None:
             return self
         kept = [p for p in self.periods if p.filed_date and p.filed_date < filed_before]
-        return StatementSeries(
-            ticker=self.ticker, statement_type=self.statement_type, periods=kept
-        )
+        return StatementSeries(ticker=self.ticker, statement_type=self.statement_type, periods=kept)
 
 
 class PricePoint(BaseModel):

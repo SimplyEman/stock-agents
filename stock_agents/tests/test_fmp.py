@@ -35,7 +35,15 @@ def patched_fmp(monkeypatch):
         if path.startswith("cash-flow-statement"):
             return cashflow
         if path.startswith("profile"):
-            return [{"companyName": "Apple Inc.", "sector": "Technology", "mktCap": 3.0e12, "ceo": "Timothy Cook", "cik": "320193"}]
+            return [
+                {
+                    "companyName": "Apple Inc.",
+                    "sector": "Technology",
+                    "mktCap": 3.0e12,
+                    "ceo": "Timothy Cook",
+                    "cik": "320193",
+                }
+            ]
         raise AssertionError(f"unexpected path {path}")
 
     monkeypatch.setattr(fmp, "_get", fake_get)
@@ -88,8 +96,20 @@ def test_as_of_filtering(patched_fmp):
 
 def test_ratios_and_key_metrics(monkeypatch):
     rows = [
-        {"date": "2023-09-30", "calendarYear": "2023", "period": "FY", "peRatio": 30.1, "roic": 0.55},
-        {"date": "2022-09-30", "calendarYear": "2022", "period": "FY", "peRatio": 24.4, "roic": 0.50},
+        {
+            "date": "2023-09-30",
+            "calendarYear": "2023",
+            "period": "FY",
+            "peRatio": 30.1,
+            "roic": 0.55,
+        },
+        {
+            "date": "2022-09-30",
+            "calendarYear": "2022",
+            "period": "FY",
+            "peRatio": 24.4,
+            "roic": 0.50,
+        },
     ]
     monkeypatch.setattr(fmp, "_get", lambda path, params=None: rows)
     km = fmp.get_key_metrics("AAPL", 2)
@@ -103,8 +123,20 @@ def test_stock_screener(monkeypatch):
         fmp,
         "_get",
         lambda path, params=None: [
-            {"symbol": "NVDA", "companyName": "NVIDIA", "marketCap": 2.0e12, "sector": "Technology", "industry": "Semis"},
-            {"symbol": "AMD", "companyName": "AMD", "marketCap": 2.5e11, "sector": "Technology", "industry": "Semis"},
+            {
+                "symbol": "NVDA",
+                "companyName": "NVIDIA",
+                "marketCap": 2.0e12,
+                "sector": "Technology",
+                "industry": "Semis",
+            },
+            {
+                "symbol": "AMD",
+                "companyName": "AMD",
+                "marketCap": 2.5e11,
+                "sector": "Technology",
+                "industry": "Semis",
+            },
         ],
     )
     cands = fmp.stock_screener(market_cap_more_than=1e9, sector="Technology")

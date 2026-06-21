@@ -8,10 +8,14 @@ from stock_agents.tools.handlers import ToolContext
 from tests.conftest import fake_anthropic_returning
 
 _VALID = MacroContext(
-    theme="AI infrastructure", sectors_covered=["Semiconductors"],
-    cycle_position="Mid capex cycle.", tailwinds=["hyperscaler capex"], headwinds=["concentration"],
+    theme="AI infrastructure",
+    sectors_covered=["Semiconductors"],
+    cycle_position="Mid capex cycle.",
+    tailwinds=["hyperscaler capex"],
+    headwinds=["concentration"],
     regime_winners_profile="cash-generative incumbents",
-    regime_losers_profile="negative-FCF names", sources=["https://example.com"],
+    regime_losers_profile="negative-FCF names",
+    sources=["https://example.com"],
 ).model_dump_json()
 
 

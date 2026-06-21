@@ -39,7 +39,8 @@ def run(*, budget_usd: float | None = None, **_kwargs) -> dict:
         if settings.llm_backend != "claude_code" and spent >= budget:
             aborted = True
             notify.emit_alert(
-                kind="cost_warning", severity="notice",
+                kind="cost_warning",
+                severity="notice",
                 subject="[post_earnings] daily budget reached",
                 short=f"post_earnings stopped after ${spent:.2f} (ceiling ${budget}).",
             )
@@ -48,8 +49,12 @@ def run(*, budget_usd: float | None = None, **_kwargs) -> dict:
             diff, snap = run_track_status(ticker)
         except Exception as exc:  # noqa: BLE001
             failed += 1
-            store.add_alert(kind="earnings_diff", severity="info", ticker=ticker,
-                            message=f"post_earnings track-status failed for {ticker}: {exc}")
+            store.add_alert(
+                kind="earnings_diff",
+                severity="info",
+                ticker=ticker,
+                message=f"post_earnings track-status failed for {ticker}: {exc}",
+            )
             continue
         processed += 1
         # Cost: the snapshot's run row carries cost; approximate via latest run.
@@ -58,17 +63,31 @@ def run(*, budget_usd: float | None = None, **_kwargs) -> dict:
             spent += latest[0].cost_estimate_usd
 
         if diff.status == "cannot_evaluate":
-            store.add_alert(kind="earnings_diff", severity="info", ticker=ticker,
-                            message=f"{ticker}: cannot evaluate post-earnings (retry next run)")
+            store.add_alert(
+                kind="earnings_diff",
+                severity="info",
+                ticker=ticker,
+                message=f"{ticker}: cannot evaluate post-earnings (retry next run)",
+            )
             continue
         if diff.is_material:
             material += 1
             subject, short, html = formatter.format_diff(diff)
-            notify.emit_alert(kind="earnings_diff", severity="important", ticker=ticker,
-                              subject=subject, short=short, html=html)
+            notify.emit_alert(
+                kind="earnings_diff",
+                severity="important",
+                ticker=ticker,
+                subject=subject,
+                short=short,
+                html=html,
+            )
 
     return {
-        "active": len(active), "reporters": len(reporters), "processed": processed,
-        "material_alerts": material, "failed": failed, "budget_aborted": aborted,
+        "active": len(active),
+        "reporters": len(reporters),
+        "processed": processed,
+        "material_alerts": material,
+        "failed": failed,
+        "budget_aborted": aborted,
         "spent_usd": round(spent, 4),
     }

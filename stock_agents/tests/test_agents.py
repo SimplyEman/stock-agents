@@ -131,7 +131,7 @@ def test_validation_failure_after_retry(tmp_path, monkeypatch):
 
 def test_json_extraction_from_fenced_block(tmp_path, monkeypatch):
     monkeypatch.setattr(base.settings, "audit_log_dir", tmp_path)
-    fenced = "```json\n{\"ticker\": \"MSFT\", \"score\": 8}\n```"
+    fenced = '```json\n{"ticker": "MSFT", "score": 8}\n```'
     script = [_Resp([_Text(fenced)], "end_turn")]
     result = _runner(script).run("sys", "go", Demo)
     assert result.output == Demo(ticker="MSFT", score=8)

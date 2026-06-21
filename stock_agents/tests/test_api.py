@@ -23,19 +23,32 @@ def client(tmp_path, monkeypatch):
 
 def _thesis(ticker="NVDA", conviction=70.0) -> InvestmentThesis:
     return InvestmentThesis(
-        ticker=ticker, name="NVIDIA", one_paragraph_summary="s", bull_case=["b"],
-        bear_case=["x"], what_would_change_my_mind="w", conviction_score=conviction,
-        conviction_label="high", fundamentals_score=8, balance_sheet_score=8,
-        management_score=7, stress_test_score=6,
+        ticker=ticker,
+        name="NVIDIA",
+        one_paragraph_summary="s",
+        bull_case=["b"],
+        bear_case=["x"],
+        what_would_change_my_mind="w",
+        conviction_score=conviction,
+        conviction_label="high",
+        fundamentals_score=8,
+        balance_sheet_score=8,
+        management_score=7,
+        stress_test_score=6,
     )
 
 
 def _track_via_report(client, tmp_path, ticker="NVDA"):
     from stock_agents.models.thesis import FinalReport
 
-    report = FinalReport(theme="ai", run_timestamp="2026-01-01T00:00:00+00:00",
-                         candidates_analyzed=1, api_cost_usd=1.0,
-                         top_picks=[_thesis(ticker)], full_results=[_thesis(ticker)])
+    report = FinalReport(
+        theme="ai",
+        run_timestamp="2026-01-01T00:00:00+00:00",
+        candidates_analyzed=1,
+        api_cost_usd=1.0,
+        top_picks=[_thesis(ticker)],
+        full_results=[_thesis(ticker)],
+    )
     path = tmp_path / f"{ticker}.json"
     path.write_text(report.model_dump_json())
     return client.post("/api/watchlist", json={"ticker": ticker, "thesis_path": str(path)})
@@ -92,9 +105,14 @@ def test_analyze_returns_run_id_and_report(client, monkeypatch):
     from stock_agents.models.thesis import FinalReport
 
     def fake_analyze(theme, max_candidates=5, **k):
-        return FinalReport(theme=theme, run_timestamp="2026-01-01T00:00:00+00:00",
-                           candidates_analyzed=1, api_cost_usd=2.0,
-                           top_picks=[_thesis()], full_results=[_thesis()])
+        return FinalReport(
+            theme=theme,
+            run_timestamp="2026-01-01T00:00:00+00:00",
+            candidates_analyzed=1,
+            api_cost_usd=2.0,
+            top_picks=[_thesis()],
+            full_results=[_thesis()],
+        )
 
     monkeypatch.setattr(orchestrator, "analyze_theme", fake_analyze)
     r = client.post("/api/themes/ai_infrastructure/analyze?max_candidates=2")
@@ -119,8 +137,12 @@ def test_analyze_forwards_filter_and_forensic_kwargs(client, monkeypatch):
         captured["asym"] = asym
         captured["forensic"] = forensic
         captured["max_candidates"] = max_candidates
-        return FinalReport(theme=theme, run_timestamp="2026-01-01T00:00:00+00:00",
-                           candidates_analyzed=0, api_cost_usd=0.0)
+        return FinalReport(
+            theme=theme,
+            run_timestamp="2026-01-01T00:00:00+00:00",
+            candidates_analyzed=0,
+            api_cost_usd=0.0,
+        )
 
     monkeypatch.setattr(orchestrator, "analyze_theme", fake_analyze)
     monkeypatch.setattr(fmp, "get_fx_rate", lambda *_a, **_k: 1.27)

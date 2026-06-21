@@ -132,7 +132,9 @@ def _from_ir(ticker: str, quarter: str | None) -> dict[str, Any] | None:
 # ---------------------------------------------------------------------------
 
 
-def _from_8k(ticker: str, quarter: str | None, *, before: str | None = None) -> dict[str, Any] | None:
+def _from_8k(
+    ticker: str, quarter: str | None, *, before: str | None = None
+) -> dict[str, Any] | None:
     cik = edgar.ticker_to_cik(ticker)
     filings = edgar.get_recent_filings(cik, "8-K", limit=40)
     # Earnings 8-Ks carry Item 2.02 (Results of Operations).

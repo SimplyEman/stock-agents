@@ -298,11 +298,11 @@ class AgentRunner:
                     result_text = json.dumps({"error": str(exc)})
                     entry["error"] = str(exc)
             entry["result_chars"] = len(result_text)
-            entry["accessions"] = extract_accessions(result_text, json.dumps(block.input, default=str))
-            audit.append(entry)
-            results.append(
-                {"type": "tool_result", "tool_use_id": block.id, "content": result_text}
+            entry["accessions"] = extract_accessions(
+                result_text, json.dumps(block.input, default=str)
             )
+            audit.append(entry)
+            results.append({"type": "tool_result", "tool_use_id": block.id, "content": result_text})
         return results
 
     @staticmethod

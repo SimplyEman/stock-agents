@@ -47,38 +47,55 @@ def track_add(
         run = store.start_run(kind="inspect", ticker=ticker)
         result = orchestrator.analyze_ticker_detailed(ticker, ctx=ctx, progress=progress)
         if not result.thesis:
-            store.finish_run(run.id, status="failed", cost_estimate_usd=result.cost_usd,
-                             error=result.error)
+            store.finish_run(
+                run.id, status="failed", cost_estimate_usd=result.cost_usd, error=result.error
+            )
             raise TrackError(f"inspect failed for {ticker}: {result.error}")
         thesis = result.thesis
         snap = snapshots.build_snapshot(
-            ticker, run.id, thesis,
-            fundamentals=result.fundamentals, balance_sheet=result.balance_sheet,
-            management=result.management, stress_test=result.stress_test,
+            ticker,
+            run.id,
+            thesis,
+            fundamentals=result.fundamentals,
+            balance_sheet=result.balance_sheet,
+            management=result.management,
+            stress_test=result.stress_test,
         )
         rel = snapshots.write_snapshot(snap)
-        store.finish_run(run.id, status="success", cost_estimate_usd=result.cost_usd,
-                         report_path=rel)
+        store.finish_run(
+            run.id, status="success", cost_estimate_usd=result.cost_usd, report_path=rel
+        )
         analysis_cost = result.cost_usd
 
     store.add_snapshot_row(
-        snapshot_id=snap.id, ticker=ticker, run_id=run.id, taken_at=snap.taken_at,
-        conviction=thesis.conviction_score, snapshot_path=rel,
+        snapshot_id=snap.id,
+        ticker=ticker,
+        run_id=run.id,
+        taken_at=snap.taken_at,
+        conviction=thesis.conviction_score,
+        snapshot_path=rel,
         fundamentals_score=thesis.fundamentals_score,
         balance_sheet_score=thesis.balance_sheet_score,
         management_score=thesis.management_score,
         stress_test_score=thesis.stress_test_score,
     )
     entry = store.add_watchlist(
-        ticker, entry_thesis_path=rel, entry_conviction=thesis.conviction_score,
-        entry_price=entry_price, notes=note,
+        ticker,
+        entry_thesis_path=rel,
+        entry_conviction=thesis.conviction_score,
+        entry_price=entry_price,
+        notes=note,
     )
     _ = analysis_cost
     return entry
 
 
 def run_track_status(
-    ticker: str, *, ctx=None, progress=None, run_id: str | None = None,
+    ticker: str,
+    *,
+    ctx=None,
+    progress=None,
+    run_id: str | None = None,
     forensic: bool = False,
 ) -> tuple[Diff, ThesisSnapshot | None]:
     """Run a fresh inspect on a tracked ticker, store the snapshot, and diff vs entry.
@@ -96,23 +113,37 @@ def run_track_status(
     run = store.start_run(kind="track_status", ticker=ticker) if run_id is None else None
     rid = run.id if run is not None else run_id
     result = orchestrator.analyze_ticker_detailed(
-        ticker, ctx=ctx, forensic=forensic, progress=progress,
+        ticker,
+        ctx=ctx,
+        forensic=forensic,
+        progress=progress,
     )
 
     if not result.thesis:
-        store.finish_run(rid, status="failed", cost_estimate_usd=result.cost_usd,
-                         error=result.error)
-        return _diff.cannot_evaluate(ticker, wl.entry_thesis_path, result.error or "inspect failed"), None
+        store.finish_run(
+            rid, status="failed", cost_estimate_usd=result.cost_usd, error=result.error
+        )
+        return _diff.cannot_evaluate(
+            ticker, wl.entry_thesis_path, result.error or "inspect failed"
+        ), None
 
     new_snap = snapshots.build_snapshot(
-        ticker, rid, result.thesis,
-        fundamentals=result.fundamentals, balance_sheet=result.balance_sheet,
-        management=result.management, stress_test=result.stress_test,
+        ticker,
+        rid,
+        result.thesis,
+        fundamentals=result.fundamentals,
+        balance_sheet=result.balance_sheet,
+        management=result.management,
+        stress_test=result.stress_test,
     )
     rel = snapshots.write_snapshot(new_snap)
     store.add_snapshot_row(
-        snapshot_id=new_snap.id, ticker=ticker, run_id=rid, taken_at=new_snap.taken_at,
-        conviction=result.thesis.conviction_score, snapshot_path=rel,
+        snapshot_id=new_snap.id,
+        ticker=ticker,
+        run_id=rid,
+        taken_at=new_snap.taken_at,
+        conviction=result.thesis.conviction_score,
+        snapshot_path=rel,
         fundamentals_score=result.thesis.fundamentals_score,
         balance_sheet_score=result.thesis.balance_sheet_score,
         management_score=result.thesis.management_score,
@@ -134,6 +165,13 @@ def current_conviction(ticker: str) -> float | None:
 
 
 __all__ = [
-    "Diff", "ThesisSnapshot", "Watchlist", "TrackError",
-    "track_add", "run_track_status", "current_conviction", "store", "snapshots",
+    "Diff",
+    "ThesisSnapshot",
+    "Watchlist",
+    "TrackError",
+    "track_add",
+    "run_track_status",
+    "current_conviction",
+    "store",
+    "snapshots",
 ]

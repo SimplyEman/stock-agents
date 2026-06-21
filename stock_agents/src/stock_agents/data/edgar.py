@@ -203,7 +203,9 @@ def fetch_filing_exhibit(cik: str, filing: Filing, *, prefer: str = "EX-99") -> 
     if not target:
         for _t, name in pairs:
             low = name.lower()
-            if low.endswith(text_exts) and ("ex99" in low.replace("-", "") or low.endswith("pr.htm") or "press" in low):
+            if low.endswith(text_exts) and (
+                "ex99" in low.replace("-", "") or low.endswith("pr.htm") or "press" in low
+            ):
                 target = name
                 break
     # 4) Last resort: the primary (cover) document.
@@ -266,8 +268,10 @@ def _parse_form4(raw: str) -> list[InsiderTransaction]:
     name = owner.get_text(strip=True) if owner else "unknown"
     is_dir = soup.find("isDirector")
     title_el = soup.find("officerTitle")
-    title = title_el.get_text(strip=True) if title_el else (
-        "Director" if (is_dir and is_dir.get_text(strip=True) in {"1", "true"}) else ""
+    title = (
+        title_el.get_text(strip=True)
+        if title_el
+        else ("Director" if (is_dir and is_dir.get_text(strip=True) in {"1", "true"}) else "")
     )
     out: list[InsiderTransaction] = []
     for txn in soup.find_all("nonDerivativeTransaction"):

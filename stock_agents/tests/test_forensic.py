@@ -15,10 +15,19 @@ from tests.conftest import fake_anthropic_returning
 def _report(accession="0000320193-24-000010", **over):
     base_ = dict(
         ticker="AAPL",
-        findings=[ForensicFinding(category="footnote", finding="related-party note",
-                                  severity="yellow", citation=f"{accession} (Note 12)")],
-        risk_factor_delta_summary="minor changes", no_notable_findings_categories=["insider_pattern"],
-        forensic_risk_score_1_to_10=3, reasoning="clean-ish", sources=[accession],
+        findings=[
+            ForensicFinding(
+                category="footnote",
+                finding="related-party note",
+                severity="yellow",
+                citation=f"{accession} (Note 12)",
+            )
+        ],
+        risk_factor_delta_summary="minor changes",
+        no_notable_findings_categories=["insider_pattern"],
+        forensic_risk_score_1_to_10=3,
+        reasoning="clean-ish",
+        sources=[accession],
     )
     base_.update(over)
     return ForensicReport(**base_)
@@ -44,9 +53,17 @@ def test_invalid_findings_detects_uncited():
 def test_finding_without_citation_is_invalid():
     rep = ForensicReport(
         ticker="X",
-        findings=[ForensicFinding(category="footnote", finding="vague concern",
-                                  severity="red", citation="no accession number here")],
-        risk_factor_delta_summary="s", forensic_risk_score_1_to_10=7, reasoning="r",
+        findings=[
+            ForensicFinding(
+                category="footnote",
+                finding="vague concern",
+                severity="red",
+                citation="no accession number here",
+            )
+        ],
+        risk_factor_delta_summary="s",
+        forensic_risk_score_1_to_10=7,
+        reasoning="r",
     )
     assert forensic._invalid_findings(rep, seen={"0000320193-24-000010"})
 
@@ -80,11 +97,18 @@ def test_compare_risk_factors_handler(monkeypatch):
         Filing(accession_number="0000320193-23-000106", form_type="10-K", filing_date="2023-11-03"),
     ]
     monkeypatch.setattr(edgar, "get_recent_filings", lambda cik, form, limit=2: filings)
-    new_txt = "\n".join(["Competition risk is significant and growing across all our markets worldwide.",
-                         "A brand-new supply chain concentration risk in a single region has emerged this year."])
+    new_txt = "\n".join(
+        [
+            "Competition risk is significant and growing across all our markets worldwide.",
+            "A brand-new supply chain concentration risk in a single region has emerged this year.",
+        ]
+    )
     old_txt = "Competition risk is significant and growing across all our markets worldwide."
-    monkeypatch.setattr(edgar, "fetch_filing_text",
-                        lambda f, section="full": new_txt if f.accession_number.endswith("24-000010") else old_txt)
+    monkeypatch.setattr(
+        edgar,
+        "fetch_filing_text",
+        lambda f, section="full": new_txt if f.accession_number.endswith("24-000010") else old_txt,
+    )
     out = json.loads(handlers.h_compare_risk_factors({"ticker": "AAPL"}, ToolContext()))
     assert out["newer_filing"]["accession"] == "0000320193-24-000010"
     assert out["added_count"] >= 1
@@ -100,7 +124,8 @@ def test_asymmetric_filter_band(monkeypatch):
 
     caps = {"NVDA": 3.0e12, "SMCI": 3.0e10, "CRDO": 8.0e9, "TINY": 1.0e8}
     monkeypatch.setattr(
-        fmp, "get_company_profile",
+        fmp,
+        "get_company_profile",
         lambda t: CompanyProfile(ticker=t, market_cap_usd=caps.get(t, 0.0)),
     )
     filt = etf.AsymmetricFilter(min_cap_usd=5e8, max_cap_usd=5e10)  # $0.5B–$50B
@@ -134,8 +159,9 @@ def test_momentum_filter_drops_runners(monkeypatch):
     from stock_agents.models.company import CompanyProfile
 
     # In-band caps for all; the momentum filter is what differentiates.
-    monkeypatch.setattr(fmp, "get_company_profile",
-                        lambda t: CompanyProfile(ticker=t, market_cap_usd=5e9))
+    monkeypatch.setattr(
+        fmp, "get_company_profile", lambda t: CompanyProfile(ticker=t, market_cap_usd=5e9)
+    )
     returns = {"COOL": 30.0, "HOT": 250.0, "BLEH": -10.0}
     monkeypatch.setattr(fmp, "get_12m_return_pct", lambda t: returns.get(t))
     filt = etf.AsymmetricFilter(max_cap_usd=1e10, max_12m_return_pct=100.0)
@@ -150,8 +176,9 @@ def test_momentum_filter_fail_open(monkeypatch):
     from stock_agents.data import fmp
     from stock_agents.models.company import CompanyProfile
 
-    monkeypatch.setattr(fmp, "get_company_profile",
-                        lambda t: CompanyProfile(ticker=t, market_cap_usd=2e9))
+    monkeypatch.setattr(
+        fmp, "get_company_profile", lambda t: CompanyProfile(ticker=t, market_cap_usd=2e9)
+    )
     monkeypatch.setattr(fmp, "get_12m_return_pct", lambda t: None)
     filt = etf.AsymmetricFilter(max_cap_usd=1e10, max_12m_return_pct=50.0)
     kept, excl = etf.filter_candidates(["UNKN"], filt)

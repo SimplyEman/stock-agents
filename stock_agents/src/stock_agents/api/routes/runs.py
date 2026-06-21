@@ -16,9 +16,16 @@ router = APIRouter(prefix="/api/runs", tags=["runs"])
 
 def _view(r) -> RunView:
     return RunView(
-        id=r.id, kind=r.kind, theme=r.theme, ticker=r.ticker, status=r.status,
-        started_at=r.started_at, finished_at=r.finished_at,
-        cost_estimate_usd=r.cost_estimate_usd, report_path=r.report_path, error=r.error,
+        id=r.id,
+        kind=r.kind,
+        theme=r.theme,
+        ticker=r.ticker,
+        status=r.status,
+        started_at=r.started_at,
+        finished_at=r.finished_at,
+        cost_estimate_usd=r.cost_estimate_usd,
+        report_path=r.report_path,
+        error=r.error,
     )
 
 

@@ -15,8 +15,7 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime, timezone
-from pathlib import Path
+from datetime import UTC, datetime
 
 from stock_agents import notify
 from stock_agents.agents import orchestrator
@@ -62,9 +61,7 @@ def _retest_position(pos: dict) -> dict:
     baseline_for = pos.get("baseline_forensic")
 
     triggers: list[str] = []
-    delta_conv = (
-        None if baseline_conv is None else round(current["conviction"] - baseline_conv, 1)
-    )
+    delta_conv = None if baseline_conv is None else round(current["conviction"] - baseline_conv, 1)
     if delta_conv is not None and abs(delta_conv) >= CONVICTION_TRIGGER:
         triggers.append(f"conviction shifted {delta_conv:+.1f} (baseline {baseline_conv})")
     if (
@@ -72,9 +69,7 @@ def _retest_position(pos: dict) -> dict:
         and current["forensic_risk"] is not None
         and (current["forensic_risk"] - baseline_for) >= FORENSIC_TRIGGER
     ):
-        triggers.append(
-            f"forensic risk increased {baseline_for} -> {current['forensic_risk']}"
-        )
+        triggers.append(f"forensic risk increased {baseline_for} -> {current['forensic_risk']}")
 
     return {
         "ticker": ticker,
@@ -96,7 +91,7 @@ def run(**_kwargs) -> dict:
         log.warning("quarterly_retest: no portfolio manifests under data/portfolios/")
         return {"portfolios": 0, "positions": 0, "alerts": 0, "spent_usd": 0.0}
 
-    today = datetime.now(timezone.utc).date().isoformat()
+    today = datetime.now(UTC).date().isoformat()
     out_dir = settings.data_dir / "reports" / "quarterly"
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -115,13 +110,14 @@ def run(**_kwargs) -> dict:
             if row.get("triggers"):
                 total_alerts += 1
                 notify.emit_alert(
-                    kind="portfolio_drift", severity="important",
+                    kind="portfolio_drift",
+                    severity="important",
                     subject=f"[{portfolio['name']}] {row['ticker']} drift",
                     short=" | ".join(row["triggers"])[:240],
                     html=(
                         f"<h3>{portfolio['name']} / {row['ticker']}</h3>"
                         f"<p>{' | '.join(row['triggers'])}</p>"
-                        f"<p>Kill criteria: {row.get('kill_criteria','')}</p>"
+                        f"<p>Kill criteria: {row.get('kill_criteria', '')}</p>"
                     ),
                 )
         digest["portfolios"].append({"name": portfolio["name"], "rows": rows})
@@ -130,7 +126,11 @@ def run(**_kwargs) -> dict:
     digest_path.write_text(json.dumps(digest, indent=2, default=str))
     log.info(
         "quarterly_retest: %d positions across %d portfolios, %d alerts, $%.2f equiv, digest -> %s",
-        total_positions, len(portfolios), total_alerts, spent, digest_path,
+        total_positions,
+        len(portfolios),
+        total_alerts,
+        spent,
+        digest_path,
     )
 
     return {

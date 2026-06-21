@@ -15,8 +15,13 @@ from stock_agents.notify.pushover import PushoverChannel
 from stock_agents.notify.sendgrid import SendGridChannel
 
 __all__ = [
-    "NotificationChannel", "PushoverChannel", "SendGridChannel",
-    "get_channels", "dispatch", "emit_alert", "formatter",
+    "NotificationChannel",
+    "PushoverChannel",
+    "SendGridChannel",
+    "get_channels",
+    "dispatch",
+    "emit_alert",
+    "formatter",
 ]
 
 

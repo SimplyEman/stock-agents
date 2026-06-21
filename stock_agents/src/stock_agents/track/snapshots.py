@@ -96,9 +96,7 @@ def load_entry_thesis(thesis_path: str, ticker: str) -> InvestmentThesis:
     if isinstance(data, dict) and "conviction_score" in data:
         thesis = InvestmentThesis.model_validate(data)
         if thesis.ticker.upper() != ticker:
-            raise ThesisFileError(
-                f"thesis file is for {thesis.ticker}, not {ticker}"
-            )
+            raise ThesisFileError(f"thesis file is for {thesis.ticker}, not {ticker}")
         return thesis
 
     raise ThesisFileError(f"unrecognized thesis file format: {thesis_path}")

@@ -174,7 +174,12 @@ def h_peer_comparison(inp: dict, ctx: ToolContext) -> str:
 def h_analyst_estimates(inp: dict, ctx: ToolContext) -> str:
     if ctx.as_of:
         return _json({"note": "analyst estimates disabled in point-in-time runs (forward-looking)"})
-    return _json({"ticker": inp["ticker"].upper(), "estimates": fmp.get_analyst_estimates(inp["ticker"], int(inp.get("years", 3)))})
+    return _json(
+        {
+            "ticker": inp["ticker"].upper(),
+            "estimates": fmp.get_analyst_estimates(inp["ticker"], int(inp.get("years", 3))),
+        }
+    )
 
 
 def h_short_interest(inp: dict, ctx: ToolContext) -> str:
@@ -191,7 +196,14 @@ def h_compare_risk_factors(inp: dict, ctx: ToolContext) -> str:
     if ctx.as_of:
         filings = [f for f in filings if f.filing_date < ctx.as_of]
     if len(filings) < 2:
-        return _json({"ticker": ticker.upper(), "error": "fewer than two 10-Ks available", "added": [], "removed": []})
+        return _json(
+            {
+                "ticker": ticker.upper(),
+                "error": "fewer than two 10-Ks available",
+                "added": [],
+                "removed": [],
+            }
+        )
     newer, older = filings[0], filings[1]
     new_txt = edgar.fetch_filing_text(newer, section="risk_factors")
     old_txt = edgar.fetch_filing_text(older, section="risk_factors")
@@ -207,15 +219,17 @@ def h_compare_risk_factors(inp: dict, ctx: ToolContext) -> str:
             added.extend(new_p[j1:j2])
         if tag in ("delete", "replace"):
             removed.extend(old_p[i1:i2])
-    return _json({
-        "ticker": ticker.upper(),
-        "newer_filing": {"accession": newer.accession_number, "date": newer.filing_date},
-        "older_filing": {"accession": older.accession_number, "date": older.filing_date},
-        "added": added[:40],
-        "removed": removed[:40],
-        "added_count": len(added),
-        "removed_count": len(removed),
-    })
+    return _json(
+        {
+            "ticker": ticker.upper(),
+            "newer_filing": {"accession": newer.accession_number, "date": newer.filing_date},
+            "older_filing": {"accession": older.accession_number, "date": older.filing_date},
+            "added": added[:40],
+            "removed": removed[:40],
+            "added_count": len(added),
+            "removed_count": len(removed),
+        }
+    )
 
 
 def h_earnings_transcript(inp: dict, ctx: ToolContext) -> str:

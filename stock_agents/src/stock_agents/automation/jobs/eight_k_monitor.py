@@ -21,12 +21,21 @@ from stock_agents.track import store
 
 log = logging.getLogger("stock_agents.automation")
 
-_FEED_URL = (
-    "https://www.sec.gov/cgi-bin/browse-edgar?action=getcurrent&type=8-K&output=atom"
-)
+_FEED_URL = "https://www.sec.gov/cgi-bin/browse-edgar?action=getcurrent&type=8-K&output=atom"
 MATERIAL_ITEMS = {
-    "1.01", "1.02", "1.03", "2.01", "2.02", "2.04", "2.05",
-    "4.01", "4.02", "5.02", "5.03", "7.01", "8.01",
+    "1.01",
+    "1.02",
+    "1.03",
+    "2.01",
+    "2.02",
+    "2.04",
+    "2.05",
+    "4.01",
+    "4.02",
+    "5.02",
+    "5.03",
+    "7.01",
+    "8.01",
 }
 _CIK_RE = re.compile(r"\((\d{1,10})\)")
 _ACC_RE = re.compile(r"accession[_-]?number=([\d-]+)", re.IGNORECASE)
@@ -86,8 +95,11 @@ def run(*, summarize: bool = False, **_kwargs) -> dict:
         # Look up item numbers + URL from the submissions feed (authoritative).
         items, url = _items_and_url(cik, accession, entry)
         store.mark_eight_k_seen(
-            accession_number=accession, ticker=ticker,
-            filed_at=entry.get("updated", ""), item_numbers=items, url=url,
+            accession_number=accession,
+            ticker=ticker,
+            filed_at=entry.get("updated", ""),
+            item_numbers=items,
+            url=url,
         )
         item_set = {c.strip() for c in (items or "").split(",") if c.strip()}
         if not (item_set & MATERIAL_ITEMS):
@@ -96,14 +108,22 @@ def run(*, summarize: bool = False, **_kwargs) -> dict:
         subject, short, html = notify.formatter.format_eight_k(ticker, items, url)
         if summarize:
             short = f"{short} | {_summarize(ticker, items)}"[:240]
-        res = notify.emit_alert(kind="eight_k", severity="notice", ticker=ticker,
-                                subject=subject, short=short, html=html)
+        res = notify.emit_alert(
+            kind="eight_k",
+            severity="notice",
+            ticker=ticker,
+            subject=subject,
+            short=short,
+            html=html,
+        )
         if any(res.values()):
             alerted += 1
 
     return {
-        "watchlist_ciks": len(cik_to_ticker), "feed_entries": len(entries),
-        "new_material": new_material, "alerted": alerted,
+        "watchlist_ciks": len(cik_to_ticker),
+        "feed_entries": len(entries),
+        "new_material": new_material,
+        "alerted": alerted,
     }
 
 
@@ -113,8 +133,10 @@ def _items_and_url(cik: str, accession: str, entry) -> tuple[str | None, str]:
         for f in edgar.get_recent_filings(cik, "8-K", limit=20):
             if f.accession_number == accession:
                 acc_nodash = accession.replace("-", "")
-                url = (f"{settings.edgar_www_url}/Archives/edgar/data/"
-                       f"{int(cik)}/{acc_nodash}/{accession}-index.html")
+                url = (
+                    f"{settings.edgar_www_url}/Archives/edgar/data/"
+                    f"{int(cik)}/{acc_nodash}/{accession}-index.html"
+                )
                 return f.item_numbers, url
     except Exception:  # noqa: BLE001
         pass
@@ -128,8 +150,13 @@ def _summarize(ticker: str, items: str | None) -> str:
 
     desc = "; ".join(describe_items(items)) or "8-K"
     try:
-        runner = AgentRunner(model="claude-haiku-4-5-20251001", tools=[], handlers={},
-                             agent_name="eight_k_summary", max_tokens=120)
+        runner = AgentRunner(
+            model="claude-haiku-4-5-20251001",
+            tools=[],
+            handlers={},
+            agent_name="eight_k_summary",
+            max_tokens=120,
+        )
         from pydantic import BaseModel
 
         class _S(BaseModel):
@@ -138,7 +165,8 @@ def _summarize(ticker: str, items: str | None) -> str:
         res = runner.run(
             system="Summarize an SEC 8-K filing in ONE plain-English sentence for an investor.",
             user_message=f"{ticker} filed an 8-K covering: {desc}. One sentence.",
-            output_schema=_S, max_iters=2,
+            output_schema=_S,
+            max_iters=2,
         )
         return res.output.summary if res.output else desc
     except Exception:  # noqa: BLE001

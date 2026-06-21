@@ -122,7 +122,9 @@ def _to_period(row: dict[str, Any], fields: dict[str, str]) -> FinancialPeriod:
     )
 
 
-def _statement(ticker: str, path: str, kind: str, fields: dict[str, str], years: int) -> StatementSeries:
+def _statement(
+    ticker: str, path: str, kind: str, fields: dict[str, str], years: int
+) -> StatementSeries:
     rows = cache.cached_call(
         path,
         {"symbol": ticker, "period": "annual", "limit": years},
@@ -239,9 +241,7 @@ def _ratio_series(ticker: str, path: str, kind: str, years: int) -> StatementSer
     )
     periods: list[FinancialPeriod] = []
     for r in rows if isinstance(rows, list) else []:
-        line_items = {
-            k: float(v) for k, v in r.items() if isinstance(v, (int, float))
-        }
+        line_items = {k: float(v) for k, v in r.items() if isinstance(v, (int, float))}
         periods.append(
             FinancialPeriod(
                 fiscal_year=int(

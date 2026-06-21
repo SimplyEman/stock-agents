@@ -1,9 +1,9 @@
 """Command-line interface.
 
-    stockagents analyze "AI infrastructure" --max-candidates 15 --output report.json
-    stockagents analyze "biotech" --backtest-date 2018-01-01
-    stockagents inspect NVDA
-    stockagents cost-report
+stockagents analyze "AI infrastructure" --max-candidates 15 --output report.json
+stockagents analyze "biotech" --backtest-date 2018-01-01
+stockagents inspect NVDA
+stockagents cost-report
 """
 
 from __future__ import annotations
@@ -53,7 +53,9 @@ def _progress_printer():
         elif stage == "budget_abort":
             console.log(f"[red]Budget guard tripped at ${event['spent']:.2f} — stopping.[/red]")
         elif stage == "done":
-            console.log(f"[bold]Run complete:[/bold] {event['analyzed']} analyzed, ${event['cost']:.2f}")
+            console.log(
+                f"[bold]Run complete:[/bold] {event['analyzed']} analyzed, ${event['cost']:.2f}"
+            )
 
     return cb
 
@@ -87,8 +89,10 @@ def _build_asym_filter(min_cap, max_cap, max_price, max_12m_return, currency):
     from stock_agents.data import etf
 
     return etf.build_filter(
-        min_market_cap_gbp=min_cap, max_market_cap_gbp=max_cap,
-        max_price_gbp=max_price, max_12m_return_pct=max_12m_return,
+        min_market_cap_gbp=min_cap,
+        max_market_cap_gbp=max_cap,
+        max_price_gbp=max_price,
+        max_12m_return_pct=max_12m_return,
         currency=currency or "gbp",
     )
 
@@ -102,19 +106,26 @@ def analyze(
         None, "--backtest-date", help="Run point-in-time as of YYYY-MM-DD"
     ),
     budget: float | None = typer.Option(None, "--budget", help="Override per-run USD budget"),
-    forensic: bool = typer.Option(False, "--forensic", help="Run the Forensic agent per candidate (~+$0.4-0.8 each)"),
+    forensic: bool = typer.Option(
+        False, "--forensic", help="Run the Forensic agent per candidate (~+$0.4-0.8 each)"
+    ),
     min_market_cap_gbp: float | None = typer.Option(None, "--min-market-cap-gbp"),
     max_market_cap_gbp: float | None = typer.Option(None, "--max-market-cap-gbp"),
     max_price_gbp: float | None = typer.Option(None, "--max-price-gbp"),
     max_12m_return_pct: float | None = typer.Option(
-        None, "--max-12m-return-pct",
+        None,
+        "--max-12m-return-pct",
         help="Drop names whose trailing 12-month price return exceeds this %% (anti-momentum)",
     ),
     currency: str = typer.Option("gbp", "--currency", help="gbp | usd (thresholds' currency)"),
 ):
     """Run the full pipeline on a theme (optionally as a historical backtest)."""
     asym = _build_asym_filter(
-        min_market_cap_gbp, max_market_cap_gbp, max_price_gbp, max_12m_return_pct, currency,
+        min_market_cap_gbp,
+        max_market_cap_gbp,
+        max_price_gbp,
+        max_12m_return_pct,
+        currency,
     )
 
     if backtest_date:
@@ -164,7 +175,9 @@ def inspect(
         raise typer.Exit(1)
     console.print(_thesis_table([thesis], ticker.upper()))
     if thesis.forensic_risk_score is not None:
-        console.print(f"[bold]Forensic risk:[/bold] {thesis.forensic_risk_score}/10 (higher = riskier)")
+        console.print(
+            f"[bold]Forensic risk:[/bold] {thesis.forensic_risk_score}/10 (higher = riskier)"
+        )
     console.print(f"\n[bold]Summary:[/bold] {thesis.one_paragraph_summary}\n")
     console.print("[green]Bull case:[/green]")
     for b in thesis.bull_case:
@@ -217,6 +230,7 @@ def _print_backtest(result) -> None:
     table.add_column("Fwd 1Y %", justify="right")
     table.add_column("Fwd 3Y %", justify="right")
     table.add_column("Fwd 5Y %", justify="right")
+
     def fmt(v, delisted):
         return "delisted" if delisted else (f"{v:.1f}" if v is not None else "—")
 
@@ -263,7 +277,9 @@ def _render_diff(diff) -> None:
     head = "[red]MATERIAL CHANGE[/red]" if diff.is_material else "[dim]no material change[/dim]"
     console.print(f"\n[bold]{diff.ticker}[/bold] — {head}")
     if diff.status == "cannot_evaluate":
-        console.print("[red]Status: cannot_evaluate[/red] — fresh analysis did not produce a thesis.")
+        console.print(
+            "[red]Status: cannot_evaluate[/red] — fresh analysis did not produce a thesis."
+        )
         for r in diff.material_reasons:
             console.print(f"  • {r}")
         return
@@ -275,9 +291,7 @@ def _render_diff(diff) -> None:
             f"[{_conv_color(diff.conviction_to)}]{diff.conviction_to:.1f}[/] "
             f"({arrow} {diff.conviction_delta:+.1f})"
         )
-    deltas = " ".join(
-        f"{k[:4]}={v:+d}" for k, v in diff.component_deltas.items()
-    )
+    deltas = " ".join(f"{k[:4]}={v:+d}" for k, v in diff.component_deltas.items())
     console.print(f"  Component Δ: {deltas}")
     if diff.red_flags_available:
         if diff.new_red_flags:
@@ -299,7 +313,9 @@ def _render_diff(diff) -> None:
 @app.command()
 def track(
     ticker: str = typer.Argument(..., help="Ticker to track, e.g. NVDA"),
-    thesis: str | None = typer.Option(None, "--thesis", help="Path to a FinalReport / thesis / snapshot JSON"),
+    thesis: str | None = typer.Option(
+        None, "--thesis", help="Path to a FinalReport / thesis / snapshot JSON"
+    ),
     entry_price: float | None = typer.Option(None, "--entry-price"),
     note: str | None = typer.Option(None, "--note"),
 ):
@@ -308,7 +324,10 @@ def track(
 
     try:
         entry = tracking.track_add(
-            ticker, thesis_path=thesis, entry_price=entry_price, note=note,
+            ticker,
+            thesis_path=thesis,
+            entry_price=entry_price,
+            note=note,
             progress=_progress_printer(),
         )
     except tracking.TrackError as exc:
@@ -382,8 +401,10 @@ def track_history(ticker: str = typer.Argument(..., help="Tracked ticker")):
         table.add_row(
             r.taken_at[:19].replace("T", " "),
             f"[{_conv_color(r.conviction)}]{r.conviction:.1f}[/]",
-            str(r.fundamentals_score or "—"), str(r.balance_sheet_score or "—"),
-            str(r.management_score or "—"), str(r.stress_test_score or "—"),
+            str(r.fundamentals_score or "—"),
+            str(r.balance_sheet_score or "—"),
+            str(r.management_score or "—"),
+            str(r.stress_test_score or "—"),
             r.run_id[:10],
         )
     console.print(table)
@@ -401,7 +422,9 @@ def untrack(
     if not row:
         console.print(f"[red]{ticker.upper()} is not tracked.[/red]")
         raise typer.Exit(1)
-    console.print(f"[yellow]{row.ticker} marked exited.[/yellow]" + (f" Reason: {reason}" if reason else ""))
+    console.print(
+        f"[yellow]{row.ticker} marked exited.[/yellow]" + (f" Reason: {reason}" if reason else "")
+    )
 
 
 @app.command(name="track-pause")
@@ -436,7 +459,9 @@ def track_resume(ticker: str = typer.Argument(...)):
 @app.command(name="run-job")
 def run_job_cmd(
     name: str = typer.Argument(..., help="Job name (see `generate-cron`)"),
-    summarize: bool = typer.Option(False, "--summarize", help="8-K monitor: add a 1-line Haiku summary per filing"),
+    summarize: bool = typer.Option(
+        False, "--summarize", help="8-K monitor: add a 1-line Haiku summary per filing"
+    ),
 ):
     """Run a single scheduled job once (used by cron and for testing)."""
     from stock_agents.automation import JOBS, run_job

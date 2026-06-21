@@ -12,8 +12,14 @@ router = APIRouter(prefix="/api/alerts", tags=["alerts"])
 
 def _view(a) -> AlertView:
     return AlertView(
-        id=a.id, kind=a.kind, ticker=a.ticker, severity=a.severity, message=a.message,
-        created_at=a.created_at, delivered_at=a.delivered_at, acknowledged_at=a.acknowledged_at,
+        id=a.id,
+        kind=a.kind,
+        ticker=a.ticker,
+        severity=a.severity,
+        message=a.message,
+        created_at=a.created_at,
+        delivered_at=a.delivered_at,
+        acknowledged_at=a.acknowledged_at,
     )
 
 

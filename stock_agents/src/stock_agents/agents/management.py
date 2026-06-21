@@ -50,9 +50,7 @@ def _fetch_transcript_block(ticker: str, ctx: ToolContext | None) -> str:
     from stock_agents.data import transcripts
 
     try:
-        result = transcripts.get_earnings_transcript(
-            ticker, before=ctx.as_of if ctx else None
-        )
+        result = transcripts.get_earnings_transcript(ticker, before=ctx.as_of if ctx else None)
     except transcripts.TranscriptUnavailable:
         return ""
     return (

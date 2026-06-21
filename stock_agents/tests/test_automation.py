@@ -26,7 +26,13 @@ def temp_store(tmp_path, monkeypatch):
 def test_job_registry():
     from stock_agents.automation import JOBS
 
-    assert set(JOBS) == {"post_earnings", "eight_k_monitor", "weekly_cache_warm", "sunday_batch"}
+    assert set(JOBS) == {
+        "post_earnings",
+        "eight_k_monitor",
+        "weekly_cache_warm",
+        "sunday_batch",
+        "quarterly_retest",
+    }
     for spec in JOBS.values():
         assert len(spec.cron.split()) == 5  # valid 5-field crontab
 
@@ -44,7 +50,9 @@ def test_run_job_success_writes_run(temp_store):
 def test_run_job_failure_writes_alert(temp_store, monkeypatch):
     from stock_agents.automation import runner
 
-    monkeypatch.setattr(runner.JOBS["sunday_batch"], "func", lambda: (_ for _ in ()).throw(RuntimeError("boom")))
+    monkeypatch.setattr(
+        runner.JOBS["sunday_batch"], "func", lambda: (_ for _ in ()).throw(RuntimeError("boom"))
+    )
     # No channels configured -> emit_alert still records the alert row.
     result = runner.run_job("sunday_batch")
     assert result["status"] == "failed"
@@ -77,7 +85,11 @@ def test_build_scheduler_registers_all():
     sch = build_scheduler()
     try:
         assert {j.id for j in sch.get_jobs()} == {
-            "post_earnings", "eight_k_monitor", "weekly_cache_warm", "sunday_batch"
+            "post_earnings",
+            "eight_k_monitor",
+            "weekly_cache_warm",
+            "sunday_batch",
+            "quarterly_retest",
         }
     finally:
         pass  # never started; nothing to shut down
@@ -116,10 +128,14 @@ def test_get_channels_selection(monkeypatch):
 def test_dispatch_skips_unconfigured(monkeypatch):
     from stock_agents import notify
 
-    monkeypatch.setattr(notify, "get_channels", lambda: [
-        _FakeChannel("pushover", ok=True, conf=True),
-        _FakeChannel("email", ok=True, conf=False),
-    ])
+    monkeypatch.setattr(
+        notify,
+        "get_channels",
+        lambda: [
+            _FakeChannel("pushover", ok=True, conf=True),
+            _FakeChannel("email", ok=True, conf=False),
+        ],
+    )
     results = notify.dispatch("s", "short", "<p>h</p>")
     assert results == {"pushover": True, "email": False}
 
@@ -128,7 +144,9 @@ def test_emit_alert_records_and_delivers(temp_store, monkeypatch):
     from stock_agents import notify
 
     monkeypatch.setattr(notify, "get_channels", lambda: [_FakeChannel("pushover", ok=True)])
-    notify.emit_alert(kind="earnings_diff", severity="notice", subject="s", short="x", ticker="NVDA")
+    notify.emit_alert(
+        kind="earnings_diff", severity="notice", subject="s", short="x", ticker="NVDA"
+    )
     alerts = temp_store.list_alerts()
     assert len(alerts) == 1 and alerts[0].delivered_at is not None  # delivered -> timestamp set
 
@@ -147,9 +165,16 @@ def test_pushover_send_false_when_unconfigured(monkeypatch):
 
 
 def test_format_diff_material():
-    d = Diff(ticker="NVDA", from_snapshot_id="a", to_snapshot_id="b",
-             conviction_from=80.0, conviction_to=60.0, conviction_delta=-20.0,
-             component_deltas={"stress_test": -3}, material_reasons=["conviction moved -20.0"])
+    d = Diff(
+        ticker="NVDA",
+        from_snapshot_id="a",
+        to_snapshot_id="b",
+        conviction_from=80.0,
+        conviction_to=60.0,
+        conviction_delta=-20.0,
+        component_deltas={"stress_test": -3},
+        material_reasons=["conviction moved -20.0"],
+    )
     subject, short, html = formatter.format_diff(d)
     assert "NVDA" in subject and "MATERIAL" in subject
     assert len(short) <= 240
@@ -157,8 +182,13 @@ def test_format_diff_material():
 
 
 def test_format_diff_cannot_evaluate():
-    d = Diff(ticker="ZZZ", from_snapshot_id="a", to_snapshot_id=None,
-             status="cannot_evaluate", material_reasons=["cannot_evaluate: delisted"])
+    d = Diff(
+        ticker="ZZZ",
+        from_snapshot_id="a",
+        to_snapshot_id=None,
+        status="cannot_evaluate",
+        material_reasons=["cannot_evaluate: delisted"],
+    )
     subject, short, html = formatter.format_diff(d)
     assert "cannot evaluate" in subject
 
@@ -187,12 +217,22 @@ def test_weekly_cache_warm(temp_store, monkeypatch):
 
     _track("NVDA")
     _track("AMD")
-    for fn in ("get_company_profile", "get_income_statement", "get_balance_sheet", "get_cash_flow_statement"):
+    for fn in (
+        "get_company_profile",
+        "get_income_statement",
+        "get_balance_sheet",
+        "get_cash_flow_statement",
+    ):
         monkeypatch.setattr(fmp, fn, lambda *a, **k: None)
     monkeypatch.setattr(edgar, "ticker_to_cik", lambda t: "0000000001")
     monkeypatch.setattr(edgar, "get_insider_transactions", lambda cik, months: [])
-    monkeypatch.setattr(edgar, "get_recent_filings", lambda cik, form, limit=1: [
-        Filing(accession_number="a", form_type="10-K", filing_date="2025-01-01")])
+    monkeypatch.setattr(
+        edgar,
+        "get_recent_filings",
+        lambda cik, form, limit=1: [
+            Filing(accession_number="a", form_type="10-K", filing_date="2025-01-01")
+        ],
+    )
     monkeypatch.setattr(edgar, "fetch_filing_text", lambda f, section="full": "10-K text")
     monkeypatch.setattr(etf, "get_etf_holdings", lambda e: None)
 
@@ -211,9 +251,15 @@ def test_post_earnings_material_alert(temp_store, monkeypatch):
     _track("AMD")
     # Only NVDA reported in the last 24h.
     monkeypatch.setattr(fmp, "get_earnings_calendar", lambda f, t: [{"symbol": "NVDA"}])
-    material = Diff(ticker="NVDA", from_snapshot_id="a", to_snapshot_id="b",
-                    conviction_from=80.0, conviction_to=60.0, conviction_delta=-20.0,
-                    material_reasons=["conviction moved -20.0"])
+    material = Diff(
+        ticker="NVDA",
+        from_snapshot_id="a",
+        to_snapshot_id="b",
+        conviction_from=80.0,
+        conviction_to=60.0,
+        conviction_delta=-20.0,
+        material_reasons=["conviction moved -20.0"],
+    )
     monkeypatch.setattr(tracking, "run_track_status", lambda t, **k: (material, None))
 
     result = post_earnings.run()
@@ -239,12 +285,15 @@ def test_eight_k_monitor_alerts_and_dedups(temp_store, monkeypatch):
 
     _track("NVDA")
     monkeypatch.setattr(edgar, "ticker_to_cik", lambda t: "0001045810")
-    entry = {"title": "8-K - NVIDIA CORP (0001045810) (Filer)",
-             "link": "https://www.sec.gov/.../0001045810-26-000051-index.htm",
-             "updated": "2026-05-20T16:05:00-04:00"}
+    entry = {
+        "title": "8-K - NVIDIA CORP (0001045810) (Filer)",
+        "link": "https://www.sec.gov/.../0001045810-26-000051-index.htm",
+        "updated": "2026-05-20T16:05:00-04:00",
+    }
     monkeypatch.setattr(eight_k_monitor, "_fetch_feed", lambda: [entry])
-    monkeypatch.setattr(eight_k_monitor, "_items_and_url",
-                        lambda cik, acc, e: ("2.02,9.01", "https://sec.gov/x"))
+    monkeypatch.setattr(
+        eight_k_monitor, "_items_and_url", lambda cik, acc, e: ("2.02,9.01", "https://sec.gov/x")
+    )
 
     r1 = eight_k_monitor.run()
     assert r1["new_material"] == 1
@@ -257,8 +306,10 @@ def test_eight_k_monitor_alerts_and_dedups(temp_store, monkeypatch):
 def test_eight_k_extract_helpers():
     from stock_agents.automation.jobs import eight_k_monitor as m
 
-    e = {"title": "8-K - APPLE INC (0000320193) (Filer)",
-         "link": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000011/0000320193-26-000011-index.htm"}
+    e = {
+        "title": "8-K - APPLE INC (0000320193) (Filer)",
+        "link": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000011/0000320193-26-000011-index.htm",
+    }
     assert m._extract_cik(e) == "0000320193"
     assert m._extract_accession(e) == "0000320193-26-000011"
 
@@ -271,12 +322,28 @@ def test_sunday_batch(temp_store, monkeypatch, tmp_path):
     monkeypatch.chdir(tmp_path)  # reports/ written under tmp
 
     def fake_analyze(theme, max_candidates=10):
-        t = InvestmentThesis(ticker="NVDA", name="NVIDIA", one_paragraph_summary="s",
-            bull_case=["b"], bear_case=["x"], what_would_change_my_mind="w",
-            conviction_score=80.0, conviction_label="very high", fundamentals_score=9,
-            balance_sheet_score=9, management_score=8, stress_test_score=7)
-        return FinalReport(theme=theme, run_timestamp="2026-05-27T00:00:00+00:00",
-                           candidates_analyzed=1, api_cost_usd=1.5, top_picks=[t], full_results=[t])
+        t = InvestmentThesis(
+            ticker="NVDA",
+            name="NVIDIA",
+            one_paragraph_summary="s",
+            bull_case=["b"],
+            bear_case=["x"],
+            what_would_change_my_mind="w",
+            conviction_score=80.0,
+            conviction_label="very high",
+            fundamentals_score=9,
+            balance_sheet_score=9,
+            management_score=8,
+            stress_test_score=7,
+        )
+        return FinalReport(
+            theme=theme,
+            run_timestamp="2026-05-27T00:00:00+00:00",
+            candidates_analyzed=1,
+            api_cost_usd=1.5,
+            top_picks=[t],
+            full_results=[t],
+        )
 
     monkeypatch.setattr(orchestrator, "analyze_theme", fake_analyze)
     result = sunday_batch.run(themes=["AI infrastructure"], max_candidates=2)
@@ -290,9 +357,21 @@ def test_sunday_batch(temp_store, monkeypatch, tmp_path):
 def test_sunday_batch_theme_diff():
     from stock_agents.automation.jobs.sunday_batch import _theme_diff
 
-    cur = {"top_picks": [{"ticker": "NVDA", "conviction_score": 80}, {"ticker": "AMD", "conviction_score": 60}]}
-    prev = {"top_picks": [{"ticker": "NVDA", "conviction_score": 60}, {"ticker": "INTC", "conviction_score": 55}]}
+    cur = {
+        "top_picks": [
+            {"ticker": "NVDA", "conviction_score": 80},
+            {"ticker": "AMD", "conviction_score": 60},
+        ]
+    }
+    prev = {
+        "top_picks": [
+            {"ticker": "NVDA", "conviction_score": 60},
+            {"ticker": "INTC", "conviction_score": 55},
+        ]
+    }
     d = _theme_diff("semis", cur, prev)
     assert d["new_entries"] == ["AMD"]
     assert d["dropouts"] == ["INTC"]
-    assert d["conviction_shifts"][0]["ticker"] == "NVDA" and d["conviction_shifts"][0]["delta"] == 20.0
+    assert (
+        d["conviction_shifts"][0]["ticker"] == "NVDA" and d["conviction_shifts"][0]["delta"] == 20.0
+    )

@@ -36,8 +36,11 @@ def list_themes() -> list[ThemeView]:
                     top5 = [t["ticker"] for t in data.get("top_picks", [])][:5]
                 except Exception:  # noqa: BLE001
                     pass
-        out.append(ThemeView(theme=theme, etfs=etfs,
-                             last_analyzed=run.finished_at if run else None, top5=top5))
+        out.append(
+            ThemeView(
+                theme=theme, etfs=etfs, last_analyzed=run.finished_at if run else None, top5=top5
+            )
+        )
     return out
 
 
@@ -56,8 +59,10 @@ def analyze_theme_endpoint(
     from stock_agents.data import etf as _etf
 
     asym = _etf.build_filter(
-        min_market_cap_gbp=min_market_cap_gbp, max_market_cap_gbp=max_market_cap_gbp,
-        max_price_gbp=max_price_gbp, max_12m_return_pct=max_12m_return_pct,
+        min_market_cap_gbp=min_market_cap_gbp,
+        max_market_cap_gbp=max_market_cap_gbp,
+        max_price_gbp=max_price_gbp,
+        max_12m_return_pct=max_12m_return_pct,
         currency=currency,
     )
     run = store.start_run(kind="analyze", theme=theme)
@@ -67,14 +72,21 @@ def analyze_theme_endpoint(
 
         try:
             report = orchestrator.analyze_theme(
-                theme, max_candidates=max_candidates, asym=asym, forensic=forensic,
+                theme,
+                max_candidates=max_candidates,
+                asym=asym,
+                forensic=forensic,
             )
             rel = Path("reports/api") / f"{run.id}.json"
             abs_path = settings.data_dir / rel
             abs_path.parent.mkdir(parents=True, exist_ok=True)
             abs_path.write_text(report.model_dump_json(indent=2))
-            store.finish_run(run.id, status="success",
-                             cost_estimate_usd=report.api_cost_usd, report_path=str(rel))
+            store.finish_run(
+                run.id,
+                status="success",
+                cost_estimate_usd=report.api_cost_usd,
+                report_path=str(rel),
+            )
         except Exception as exc:  # noqa: BLE001
             store.finish_run(run.id, status="failed", error=str(exc))
 

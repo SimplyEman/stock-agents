@@ -36,7 +36,11 @@ def run(theme: str, *, ctx: ToolContext | None = None, constraints: str = "") ->
         agent_name=NAME,
         max_tokens=8192,  # candidate lists can be long
     )
-    extra = f"\n\nUNIVERSE CONSTRAINTS (hard — only include names that satisfy these): {constraints}" if constraints else ""
+    extra = (
+        f"\n\nUNIVERSE CONSTRAINTS (hard — only include names that satisfy these): {constraints}"
+        if constraints
+        else ""
+    )
     return runner.run(
         system=SYSTEM,
         user_message=(

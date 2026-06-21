@@ -39,4 +39,6 @@ def get_news(ticker: str, limit: int = 10) -> list[dict[str, Any]]:
 
         return _do()
 
-    return cache.cached_call("tiingo_news", {"ticker": ticker, "limit": limit}, _load, ttl=cache.TTL_FUNDAMENTALS)
+    return cache.cached_call(
+        "tiingo_news", {"ticker": ticker, "limit": limit}, _load, ttl=cache.TTL_FUNDAMENTALS
+    )

@@ -94,9 +94,13 @@ class MacroContext(BaseModel):
 
 class ForensicFinding(BaseModel):
     category: Literal[
-        "risk_factor_delta", "footnote", "working_capital",
-        "auditor_or_restatement", "insider_pattern",
-        "proxy_governance", "recent_8k",
+        "risk_factor_delta",
+        "footnote",
+        "working_capital",
+        "auditor_or_restatement",
+        "insider_pattern",
+        "proxy_governance",
+        "recent_8k",
     ]
     finding: str  # one paragraph describing the signal
     severity: Literal["green", "yellow", "red"]

@@ -37,7 +37,12 @@ MODEL_PRICING: dict[str, dict[str, float]] = {
     # input / output / cache-write (5m) / cache-read, USD per 1M tokens.
     "claude-opus-4-7": {"input": 15.0, "output": 75.0, "cache_write": 18.75, "cache_read": 1.5},
     "claude-sonnet-4-6": {"input": 3.0, "output": 15.0, "cache_write": 3.75, "cache_read": 0.30},
-    "claude-haiku-4-5-20251001": {"input": 1.0, "output": 5.0, "cache_write": 1.25, "cache_read": 0.10},
+    "claude-haiku-4-5-20251001": {
+        "input": 1.0,
+        "output": 5.0,
+        "cache_write": 1.25,
+        "cache_read": 0.10,
+    },
 }
 
 
@@ -86,7 +91,9 @@ class Settings(BaseSettings):
 
     # v2 Phase 4/5: per-job cost ceilings (metered-API budgets; advisory on Max).
     weekly_budget_usd: float = Field(default=40.0, alias="WEEKLY_BUDGET_USD")
-    daily_post_earnings_budget_usd: float = Field(default=5.0, alias="DAILY_POST_EARNINGS_BUDGET_USD")
+    daily_post_earnings_budget_usd: float = Field(
+        default=5.0, alias="DAILY_POST_EARNINGS_BUDGET_USD"
+    )
     sunday_batch_budget_usd: float = Field(default=25.0, alias="SUNDAY_BATCH_BUDGET_USD")
 
     # v2 Phase 5: sunday_batch themes + candidate depth (comma-separated themes).

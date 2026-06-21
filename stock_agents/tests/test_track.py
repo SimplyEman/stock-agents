@@ -27,10 +27,18 @@ def temp_store(tmp_path, monkeypatch):
 
 def _thesis(ticker="NVDA", conviction=70.0, **over) -> InvestmentThesis:
     base = dict(
-        ticker=ticker, name="NVIDIA", one_paragraph_summary="s",
-        bull_case=["b1"], bear_case=["x1"], what_would_change_my_mind="growth stalls",
-        conviction_score=conviction, conviction_label="high",
-        fundamentals_score=8, balance_sheet_score=8, management_score=7, stress_test_score=6,
+        ticker=ticker,
+        name="NVIDIA",
+        one_paragraph_summary="s",
+        bull_case=["b1"],
+        bear_case=["x1"],
+        what_would_change_my_mind="growth stalls",
+        conviction_score=conviction,
+        conviction_label="high",
+        fundamentals_score=8,
+        balance_sheet_score=8,
+        management_score=7,
+        stress_test_score=6,
     )
     base.update(over)
     return InvestmentThesis(**base)
@@ -38,21 +46,63 @@ def _thesis(ticker="NVDA", conviction=70.0, **over) -> InvestmentThesis:
 
 def _reports(ticker="NVDA"):
     return (
-        FundamentalsReport(ticker=ticker, revenue_cagr_3y=40, revenue_cagr_5y=40,
-            gross_margin_latest=70, gross_margin_trend="expanding", operating_margin_latest=50,
-            fcf_conversion=0.9, rule_of_40_score=80, segment_analysis="x", peer_comparison="y",
-            red_flags=[], yellow_flags=[], score_1_to_10=8, reasoning="r"),
-        BalanceSheetReport(ticker=ticker, current_ratio=3.0, shares_outstanding_cagr_3y=1.0,
-            sbc_pct_revenue=5.0, fcf_vs_netincome_gap_pct=5.0, goodwill_pct_assets=2.0,
-            debt_maturity_risk="low", capital_allocation_grade="A", red_flags=[], yellow_flags=[],
-            score_1_to_10=8, reasoning="r"),
-        ManagementReport(ticker=ticker, ceo_name="J", ceo_tenure_years=10, is_founder_led=True,
-            insider_ownership_pct=3.0, insider_net_buying_24mo=0.0, shareholder_letter_summary="s",
-            governance_concerns=[], capital_allocation_track_record="t", earnings_call_quality="strong",
-            score_1_to_10=7, reasoning="r"),
-        StressTestReport(ticker=ticker, bear_thesis="b", counterargument_1="1", counterargument_2="2",
-            counterargument_3="3", who_has_to_lose="x", regulatory_risk="r", valuation_check="v",
-            historical_analogues=["a"], survivability_score_1_to_10=6, reasoning="r"),
+        FundamentalsReport(
+            ticker=ticker,
+            revenue_cagr_3y=40,
+            revenue_cagr_5y=40,
+            gross_margin_latest=70,
+            gross_margin_trend="expanding",
+            operating_margin_latest=50,
+            fcf_conversion=0.9,
+            rule_of_40_score=80,
+            segment_analysis="x",
+            peer_comparison="y",
+            red_flags=[],
+            yellow_flags=[],
+            score_1_to_10=8,
+            reasoning="r",
+        ),
+        BalanceSheetReport(
+            ticker=ticker,
+            current_ratio=3.0,
+            shares_outstanding_cagr_3y=1.0,
+            sbc_pct_revenue=5.0,
+            fcf_vs_netincome_gap_pct=5.0,
+            goodwill_pct_assets=2.0,
+            debt_maturity_risk="low",
+            capital_allocation_grade="A",
+            red_flags=[],
+            yellow_flags=[],
+            score_1_to_10=8,
+            reasoning="r",
+        ),
+        ManagementReport(
+            ticker=ticker,
+            ceo_name="J",
+            ceo_tenure_years=10,
+            is_founder_led=True,
+            insider_ownership_pct=3.0,
+            insider_net_buying_24mo=0.0,
+            shareholder_letter_summary="s",
+            governance_concerns=[],
+            capital_allocation_track_record="t",
+            earnings_call_quality="strong",
+            score_1_to_10=7,
+            reasoning="r",
+        ),
+        StressTestReport(
+            ticker=ticker,
+            bear_thesis="b",
+            counterargument_1="1",
+            counterargument_2="2",
+            counterargument_3="3",
+            who_has_to_lose="x",
+            regulatory_risk="r",
+            valuation_check="v",
+            historical_analogues=["a"],
+            survivability_score_1_to_10=6,
+            reasoning="r",
+        ),
     )
 
 
@@ -60,9 +110,14 @@ def test_track_add_from_finalreport(temp_store, tmp_path):
     from stock_agents import track as tracking
     from stock_agents.models.thesis import FinalReport
 
-    report = FinalReport(theme="ai", run_timestamp="2026-01-01T00:00:00+00:00",
-                         candidates_analyzed=1, api_cost_usd=1.0,
-                         top_picks=[_thesis()], full_results=[_thesis()])
+    report = FinalReport(
+        theme="ai",
+        run_timestamp="2026-01-01T00:00:00+00:00",
+        candidates_analyzed=1,
+        api_cost_usd=1.0,
+        top_picks=[_thesis()],
+        full_results=[_thesis()],
+    )
     path = tmp_path / "report.json"
     path.write_text(report.model_dump_json())
 
@@ -81,9 +136,14 @@ def test_track_add_unknown_ticker_in_report_raises(temp_store, tmp_path):
     from stock_agents.models.thesis import FinalReport
     from stock_agents.track.snapshots import ThesisFileError
 
-    report = FinalReport(theme="ai", run_timestamp="2026-01-01T00:00:00+00:00",
-                         candidates_analyzed=1, api_cost_usd=1.0,
-                         top_picks=[_thesis("AMD")], full_results=[_thesis("AMD")])
+    report = FinalReport(
+        theme="ai",
+        run_timestamp="2026-01-01T00:00:00+00:00",
+        candidates_analyzed=1,
+        api_cost_usd=1.0,
+        top_picks=[_thesis("AMD")],
+        full_results=[_thesis("AMD")],
+    )
     path = tmp_path / "r.json"
     path.write_text(report.model_dump_json())
     with pytest.raises(ThesisFileError):
@@ -116,8 +176,13 @@ def test_track_status_stores_snapshot_and_diffs(temp_store, tmp_path, monkeypatc
     # Fresh inspect returns a materially lower conviction + analyst reports.
     f, b, m, s = _reports()
     fake = orchestrator.CandidateAnalysis(
-        ticker="NVDA", thesis=_thesis(conviction=50.0, stress_test_score=3),
-        fundamentals=f, balance_sheet=b, management=m, stress_test=s, cost_usd=0.42,
+        ticker="NVDA",
+        thesis=_thesis(conviction=50.0, stress_test_score=3),
+        fundamentals=f,
+        balance_sheet=b,
+        management=m,
+        stress_test=s,
+        cost_usd=0.42,
     )
     monkeypatch.setattr(orchestrator, "analyze_ticker_detailed", lambda t, **k: fake)
 
@@ -140,8 +205,9 @@ def test_track_status_cannot_evaluate(temp_store, tmp_path, monkeypatch):
     path.write_text(_thesis().model_dump_json())
     tracking.track_add("NVDA", thesis_path=str(path))
 
-    fake = orchestrator.CandidateAnalysis(ticker="NVDA", thesis=None, cost_usd=0.1,
-                                          error="no data / delisted")
+    fake = orchestrator.CandidateAnalysis(
+        ticker="NVDA", thesis=None, cost_usd=0.1, error="no data / delisted"
+    )
     monkeypatch.setattr(orchestrator, "analyze_ticker_detailed", lambda t, **k: fake)
     diff, snap = tracking.run_track_status("NVDA")
     assert snap is None

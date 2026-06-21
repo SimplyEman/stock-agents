@@ -122,12 +122,18 @@ def set_status(ticker: str, status: str, *, note: str | None = None) -> Watchlis
 # ---------------------------------------------------------------------------
 
 
-def start_run(kind: str, *, ticker: str | None = None, theme: str | None = None,
-              as_of: str | None = None) -> Run:
+def start_run(
+    kind: str, *, ticker: str | None = None, theme: str | None = None, as_of: str | None = None
+) -> Run:
     with session() as s:
         row = Run(
-            id=new_ulid(), kind=kind, ticker=ticker, theme=theme, as_of=as_of,
-            started_at=now_iso(), status="running",
+            id=new_ulid(),
+            kind=kind,
+            ticker=ticker,
+            theme=theme,
+            as_of=as_of,
+            started_at=now_iso(),
+            status="running",
         )
         s.add(row)
         s.commit()
@@ -135,8 +141,14 @@ def start_run(kind: str, *, ticker: str | None = None, theme: str | None = None,
         return row
 
 
-def finish_run(run_id: str, *, status: str, cost_estimate_usd: float | None = None,
-               report_path: str | None = None, error: str | None = None) -> None:
+def finish_run(
+    run_id: str,
+    *,
+    status: str,
+    cost_estimate_usd: float | None = None,
+    report_path: str | None = None,
+    error: str | None = None,
+) -> None:
     with session() as s:
         row = s.get(Run, run_id)
         if not row:
@@ -175,10 +187,16 @@ def add_snapshot_row(
 ) -> ThesisSnapshotRow:
     with session() as s:
         row = ThesisSnapshotRow(
-            id=snapshot_id, ticker=ticker.upper(), run_id=run_id, taken_at=taken_at,
-            conviction=conviction, snapshot_path=snapshot_path,
-            fundamentals_score=fundamentals_score, balance_sheet_score=balance_sheet_score,
-            management_score=management_score, stress_test_score=stress_test_score,
+            id=snapshot_id,
+            ticker=ticker.upper(),
+            run_id=run_id,
+            taken_at=taken_at,
+            conviction=conviction,
+            snapshot_path=snapshot_path,
+            fundamentals_score=fundamentals_score,
+            balance_sheet_score=balance_sheet_score,
+            management_score=management_score,
+            stress_test_score=stress_test_score,
         )
         s.add(row)
         s.commit()
@@ -222,8 +240,13 @@ def add_alert(
 ) -> Alert:
     with session() as s:
         row = Alert(
-            id=new_ulid(), kind=kind, severity=severity, message=message, ticker=ticker,
-            payload_path=payload_path, created_at=now_iso(),
+            id=new_ulid(),
+            kind=kind,
+            severity=severity,
+            message=message,
+            ticker=ticker,
+            payload_path=payload_path,
+            created_at=now_iso(),
         )
         s.add(row)
         s.commit()
@@ -276,8 +299,13 @@ def mark_eight_k_seen(
     with session() as s:
         if s.get(EightKSeen, accession_number):
             return
-        s.add(EightKSeen(
-            accession_number=accession_number, ticker=ticker.upper(), filed_at=filed_at,
-            item_numbers=item_numbers, url=url,
-        ))
+        s.add(
+            EightKSeen(
+                accession_number=accession_number,
+                ticker=ticker.upper(),
+                filed_at=filed_at,
+                item_numbers=item_numbers,
+                url=url,
+            )
+        )
         s.commit()

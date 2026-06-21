@@ -42,9 +42,11 @@ def format_diff(diff: Diff) -> tuple[str, str, str]:
         short = f"{diff.ticker}: fresh analysis could not produce a thesis. " + "; ".join(
             diff.material_reasons
         )
-        html = f"<h3>{diff.ticker} — cannot evaluate</h3><ul>" + "".join(
-            f"<li>{r}</li>" for r in diff.material_reasons
-        ) + "</ul>"
+        html = (
+            f"<h3>{diff.ticker} — cannot evaluate</h3><ul>"
+            + "".join(f"<li>{r}</li>" for r in diff.material_reasons)
+            + "</ul>"
+        )
         return subject, short, html
 
     tag = "MATERIAL" if diff.is_material else "quiet"
@@ -72,13 +74,17 @@ def format_diff(diff: Diff) -> tuple[str, str, str]:
         f"<p><b>New red flags</b></p><ul>{flags}</ul>"
     )
     if diff.falsifiers_referenced:
-        html += "<p><b>Entry falsifiers now in the bear case</b></p><ul>" + "".join(
-            f"<li>{f}</li>" for f in diff.falsifiers_referenced
-        ) + "</ul>"
+        html += (
+            "<p><b>Entry falsifiers now in the bear case</b></p><ul>"
+            + "".join(f"<li>{f}</li>" for f in diff.falsifiers_referenced)
+            + "</ul>"
+        )
     if diff.material_reasons:
-        html += "<p><b>Material because</b></p><ul>" + "".join(
-            f"<li>{r}</li>" for r in diff.material_reasons
-        ) + "</ul>"
+        html += (
+            "<p><b>Material because</b></p><ul>"
+            + "".join(f"<li>{r}</li>" for r in diff.material_reasons)
+            + "</ul>"
+        )
     return subject, short, html
 
 
@@ -91,6 +97,6 @@ def format_eight_k(ticker: str, item_numbers: str | None, url: str) -> tuple[str
     html = (
         f"<h3>{ticker} — 8-K filed</h3><ul>"
         + "".join(f"<li>{it}</li>" for it in items or ["8-K"])
-        + f"</ul><p><a href=\"{url}\">{url}</a></p>"
+        + f'</ul><p><a href="{url}">{url}</a></p>'
     )
     return subject, short, html

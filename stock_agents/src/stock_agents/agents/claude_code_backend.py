@@ -37,8 +37,15 @@ def _is_web_search(tool_def: dict) -> bool:
     return tool_def.get("type", "").startswith("web_search")
 
 
-def _build_sdk_tools(tool_defs: list[dict], handlers: dict, ctx: ToolContext, audit: list[dict],
-                     run_id: str, agent_name: str, ticker: str | None) -> list:
+def _build_sdk_tools(
+    tool_defs: list[dict],
+    handlers: dict,
+    ctx: ToolContext,
+    audit: list[dict],
+    run_id: str,
+    agent_name: str,
+    ticker: str | None,
+) -> list:
     sdk_tools = []
     for d in tool_defs:
         name = d.get("name")
@@ -131,11 +138,16 @@ async def _run_async(
                 usage = msg.usage or {}
                 cost = msg.total_cost_usd or 0.0
     except Exception as exc:  # SDK signals max-turns / transport issues by raising
-        audit.append({
-            "run_id": run_id, "agent": agent_name, "ticker": ticker,
-            "backend": "claude_code", "error": str(exc),
-            "ts": dt.datetime.now(dt.UTC).isoformat(),
-        })
+        audit.append(
+            {
+                "run_id": run_id,
+                "agent": agent_name,
+                "ticker": ticker,
+                "backend": "claude_code",
+                "error": str(exc),
+                "ts": dt.datetime.now(dt.UTC).isoformat(),
+            }
+        )
     return final, usage, cost, audit
 
 
@@ -182,8 +194,13 @@ def run_agent(
     def _finish(output, error=None):
         record_cost(agent_name, f"{model}@claude_code", cost, ticker)
         return AgentResult(
-            output=output, cost_usd=cost, usage=usage, audit_log=audit,
-            raw_text=final, model=f"{model}@claude_code", error=error,
+            output=output,
+            cost_usd=cost,
+            usage=usage,
+            audit_log=audit,
+            raw_text=final,
+            model=f"{model}@claude_code",
+            error=error,
         )
 
     try:
@@ -199,10 +216,22 @@ def run_agent(
         try:
             output = output_schema.model_validate_json(_extract_json(final2))
             record_cost(agent_name, f"{model}@claude_code", nonlocal_cost, ticker)
-            return AgentResult(output=output, cost_usd=nonlocal_cost, usage=usage,
-                               audit_log=audit, raw_text=final2, model=f"{model}@claude_code")
+            return AgentResult(
+                output=output,
+                cost_usd=nonlocal_cost,
+                usage=usage,
+                audit_log=audit,
+                raw_text=final2,
+                model=f"{model}@claude_code",
+            )
         except (ValidationError, ValueError, json.JSONDecodeError) as exc2:
             record_cost(agent_name, f"{model}@claude_code", nonlocal_cost, ticker)
-            return AgentResult(output=None, cost_usd=nonlocal_cost, usage=usage, audit_log=audit,
-                               raw_text=final2, model=f"{model}@claude_code",
-                               error=f"schema validation failed: {exc2}")
+            return AgentResult(
+                output=None,
+                cost_usd=nonlocal_cost,
+                usage=usage,
+                audit_log=audit,
+                raw_text=final2,
+                model=f"{model}@claude_code",
+                error=f"schema validation failed: {exc2}",
+            )

@@ -54,7 +54,9 @@ def test_income_handler_point_in_time(patched_fmp):
 
 
 def test_analyst_estimates_disabled_in_backtest():
-    out = json.loads(handlers.h_analyst_estimates({"ticker": "AAPL"}, ToolContext(as_of="2018-01-01")))
+    out = json.loads(
+        handlers.h_analyst_estimates({"ticker": "AAPL"}, ToolContext(as_of="2018-01-01"))
+    )
     assert "disabled" in out["note"]
 
 
@@ -72,11 +74,25 @@ def test_insider_transactions_handler(monkeypatch):
         edgar,
         "get_insider_transactions",
         lambda cik, months: [
-            InsiderTransaction(filer_name="A", transaction_date="2024-04-01", transaction_type="S", is_open_market=True, value_usd=-1000.0),
-            InsiderTransaction(filer_name="B", transaction_date="2024-02-01", transaction_type="P", is_open_market=True, value_usd=500.0),
+            InsiderTransaction(
+                filer_name="A",
+                transaction_date="2024-04-01",
+                transaction_type="S",
+                is_open_market=True,
+                value_usd=-1000.0,
+            ),
+            InsiderTransaction(
+                filer_name="B",
+                transaction_date="2024-02-01",
+                transaction_type="P",
+                is_open_market=True,
+                value_usd=500.0,
+            ),
         ],
     )
-    out = json.loads(handlers.h_insider_transactions({"ticker": "AAPL", "months": 24}, ToolContext()))
+    out = json.loads(
+        handlers.h_insider_transactions({"ticker": "AAPL", "months": 24}, ToolContext())
+    )
     assert out["net_usd_all"] == pytest.approx(-500.0)
     assert out["net_usd_open_market"] == pytest.approx(-500.0)
     assert out["transaction_count"] == 2
@@ -88,7 +104,9 @@ def test_etf_holdings_handler(monkeypatch):
     monkeypatch.setattr(
         etf,
         "get_etf_holdings",
-        lambda t, top_n=25: ETFHoldings(etf_ticker=t, holdings=[ETFHolding(ticker="NVDA", weight_pct=9.0)]),
+        lambda t, top_n=25: ETFHoldings(
+            etf_ticker=t, holdings=[ETFHolding(ticker="NVDA", weight_pct=9.0)]
+        ),
     )
     out = json.loads(handlers.h_etf_holdings({"etf_ticker": "SOXX", "top_n": 25}, ToolContext()))
     assert out["holdings"][0]["ticker"] == "NVDA"

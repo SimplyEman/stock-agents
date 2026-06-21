@@ -44,23 +44,37 @@ def _previous_report(theme: str, today: str) -> dict | None:
 def _theme_diff(theme: str, current: dict, previous: dict | None) -> dict:
     cur = {t["ticker"]: t["conviction_score"] for t in current.get("top_picks", [])}
     if previous is None:
-        return {"theme": theme, "first_run": True, "top5": list(cur),
-                "new_entries": [], "dropouts": [], "conviction_shifts": []}
+        return {
+            "theme": theme,
+            "first_run": True,
+            "top5": list(cur),
+            "new_entries": [],
+            "dropouts": [],
+            "conviction_shifts": [],
+        }
     prev = {t["ticker"]: t["conviction_score"] for t in previous.get("top_picks", [])}
     shifts = [
         {"ticker": k, "from": prev[k], "to": cur[k], "delta": round(cur[k] - prev[k], 1)}
-        for k in set(cur) & set(prev) if abs(cur[k] - prev[k]) > 15
+        for k in set(cur) & set(prev)
+        if abs(cur[k] - prev[k]) > 15
     ]
     return {
-        "theme": theme, "first_run": False, "top5": list(cur),
+        "theme": theme,
+        "first_run": False,
+        "top5": list(cur),
         "new_entries": sorted(set(cur) - set(prev)),
         "dropouts": sorted(set(prev) - set(cur)),
         "conviction_shifts": shifts,
     }
 
 
-def run(*, themes: list[str] | None = None, max_candidates: int | None = None,
-        budget_usd: float | None = None, **_kwargs) -> dict:
+def run(
+    *,
+    themes: list[str] | None = None,
+    max_candidates: int | None = None,
+    budget_usd: float | None = None,
+    **_kwargs,
+) -> dict:
     from stock_agents import notify
     from stock_agents.agents import orchestrator
 
@@ -75,9 +89,12 @@ def run(*, themes: list[str] | None = None, max_candidates: int | None = None,
     for theme in themes:
         if settings.llm_backend != "claude_code" and spent >= budget:
             aborted = True
-            notify.emit_alert(kind="cost_warning", severity="notice",
-                              subject="[sunday_batch] weekly budget reached",
-                              short=f"sunday_batch stopped after ${spent:.2f} (ceiling ${budget}).")
+            notify.emit_alert(
+                kind="cost_warning",
+                severity="notice",
+                subject="[sunday_batch] weekly budget reached",
+                short=f"sunday_batch stopped after ${spent:.2f} (ceiling ${budget}).",
+            )
             break
         try:
             report = orchestrator.analyze_theme(theme, max_candidates=max_candidates)
@@ -91,11 +108,17 @@ def run(*, themes: list[str] | None = None, max_candidates: int | None = None,
 
     if completed:
         subject, short, html = _digest(today, diffs)
-        notify.emit_alert(kind="earnings_diff", severity="info",
-                          subject=subject, short=short, html=html)
+        notify.emit_alert(
+            kind="earnings_diff", severity="info", subject=subject, short=short, html=html
+        )
 
-    return {"themes": themes, "completed": completed, "spent_usd": round(spent, 4),
-            "budget_aborted": aborted, "report_dir": str(out_dir)}
+    return {
+        "themes": themes,
+        "completed": completed,
+        "spent_usd": round(spent, 4),
+        "budget_aborted": aborted,
+        "report_dir": str(out_dir),
+    }
 
 
 def _digest(date: str, diffs: list[dict]) -> tuple[str, str, str]:

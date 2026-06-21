@@ -27,7 +27,9 @@ class InvestmentThesis(BaseModel):
     # v2 Phase 2: references to the peer-comparison and macro-overlay agents.
     # Informative only — they do NOT enter the conviction composite (unchanged).
     peer_preference_strength: int | None = Field(
-        default=None, ge=1, le=10,
+        default=None,
+        ge=1,
+        le=10,
         description="Peer-comparison agent's confidence the subject beats its closest alternatives",
     )
     macro_fit: str = Field(
@@ -35,7 +37,9 @@ class InvestmentThesis(BaseModel):
         description="One phrase on whether the candidate fits the regime winners or losers profile",
     )
     forensic_risk_score: int | None = Field(
-        default=None, ge=1, le=10,
+        default=None,
+        ge=1,
+        le=10,
         description="Forensic agent's filings-risk score (forensic mode only); higher = riskier",
     )
     sources: list[str] = Field(

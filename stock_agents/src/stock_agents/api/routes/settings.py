@@ -48,9 +48,11 @@ def get_settings() -> SettingsView:
         alert_channel=overlay.get("alert_channel", settings.alert_channel),
         weekly_budget_usd=overlay.get("weekly_budget_usd", settings.weekly_budget_usd),
         daily_post_earnings_budget_usd=overlay.get(
-            "daily_post_earnings_budget_usd", settings.daily_post_earnings_budget_usd),
+            "daily_post_earnings_budget_usd", settings.daily_post_earnings_budget_usd
+        ),
         sunday_batch_budget_usd=overlay.get(
-            "sunday_batch_budget_usd", settings.sunday_batch_budget_usd),
+            "sunday_batch_budget_usd", settings.sunday_batch_budget_usd
+        ),
         llm_backend=settings.llm_backend,
     )
 

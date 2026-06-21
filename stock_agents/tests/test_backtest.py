@@ -76,9 +76,7 @@ def test_was_investable_fail_open(monkeypatch):
 
 
 def test_filter_to_investable_splits(monkeypatch):
-    monkeypatch.setattr(
-        pit, "was_investable_on", lambda t, d: t in {"CRM", "NOW"}
-    )
+    monkeypatch.setattr(pit, "was_investable_on", lambda t, d: t in {"CRM", "NOW"})
     keep, drop = pit.filter_to_investable(["CRM", "CRWV", "NOW", "PLTR"], "2020-01-01")
     assert keep == ["CRM", "NOW"]
     assert drop == ["CRWV", "PLTR"]

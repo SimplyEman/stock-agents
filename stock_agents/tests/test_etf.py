@@ -12,7 +12,7 @@ ARK_CSV = """date,fund,company,ticker,cusip,shares,market value ($),weight (%)
 04/01/2024,ARKK,,,,,,
 """
 
-ISHARES_CSV = '''
+ISHARES_CSV = """
 iShares Fund,,,
 Holdings as of,"Apr 01, 2024",,
 \x20
@@ -20,7 +20,7 @@ Holdings as of,"Apr 01, 2024",,
 "NVDA","NVIDIA CORP","Information Technology","9.50"
 "AVGO","BROADCOM INC","Information Technology","8.10"
 "-","Cash","Cash","0.50"
-'''
+"""
 
 
 def test_scrape_ark(monkeypatch):
@@ -54,7 +54,9 @@ def test_fallback_to_fmp_on_failure(monkeypatch):
     def fake_fmp_fallback(symbol):
         from stock_agents.models.company import ETFHolding, ETFHoldings
 
-        return ETFHoldings(etf_ticker=symbol, holdings=[ETFHolding(ticker="FALLBACK", weight_pct=1.0)])
+        return ETFHoldings(
+            etf_ticker=symbol, holdings=[ETFHolding(ticker="FALLBACK", weight_pct=1.0)]
+        )
 
     monkeypatch.setattr(etf, "_scrape_fmp_fallback", fake_fmp_fallback)
     holdings = etf.get_etf_holdings("ARKK")

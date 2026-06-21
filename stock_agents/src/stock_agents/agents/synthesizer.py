@@ -54,8 +54,12 @@ Be concise: the one-paragraph summary is 4-6 sentences, bull/bear bullets are on
 
 
 def compute_conviction(
-    fundamentals: int, balance_sheet: int, management: int, stress_test: int,
-    *, forensic_risk: int | None = None,
+    fundamentals: int,
+    balance_sheet: int,
+    management: int,
+    stress_test: int,
+    *,
+    forensic_risk: int | None = None,
 ) -> tuple[float, Literal["low", "medium", "high", "very high"]]:
     if forensic_risk is None:
         score = (
@@ -87,9 +91,7 @@ def compute_conviction(
 
 def run(
     ticker: str,
-    reports: list[
-        FundamentalsReport | BalanceSheetReport | ManagementReport | StressTestReport
-    ],
+    reports: list[FundamentalsReport | BalanceSheetReport | ManagementReport | StressTestReport],
     *,
     peer_report: PeerComparisonReport | None = None,
     macro: MacroContext | None = None,

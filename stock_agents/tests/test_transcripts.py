@@ -11,9 +11,15 @@ from stock_agents.models.company import Filing
 
 
 def test_source_priority_alphavantage_first(monkeypatch):
-    monkeypatch.setattr(transcripts, "_from_alphavantage", lambda t, q: {"source": "alphavantage", "text": "AV transcript", "quarter": "Q3-2025"})
+    monkeypatch.setattr(
+        transcripts,
+        "_from_alphavantage",
+        lambda t, q: {"source": "alphavantage", "text": "AV transcript", "quarter": "Q3-2025"},
+    )
     monkeypatch.setattr(transcripts, "_from_ir", lambda t, q: {"source": "ir", "text": "IR"})
-    monkeypatch.setattr(transcripts, "_from_8k", lambda t, q, before=None: {"source": "8k", "text": "8K"})
+    monkeypatch.setattr(
+        transcripts, "_from_8k", lambda t, q, before=None: {"source": "8k", "text": "8K"}
+    )
     res = transcripts.get_earnings_transcript("NVDA")
     assert res["source"] == "alphavantage"
 
@@ -21,7 +27,15 @@ def test_source_priority_alphavantage_first(monkeypatch):
 def test_falls_through_to_8k(monkeypatch):
     monkeypatch.setattr(transcripts, "_from_alphavantage", lambda t, q: None)
     monkeypatch.setattr(transcripts, "_from_ir", lambda t, q: None)
-    monkeypatch.setattr(transcripts, "_from_8k", lambda t, q, before=None: {"source": "8k", "text": "press release text", "quarter": "Q3-2025"})
+    monkeypatch.setattr(
+        transcripts,
+        "_from_8k",
+        lambda t, q, before=None: {
+            "source": "8k",
+            "text": "press release text",
+            "quarter": "Q3-2025",
+        },
+    )
     res = transcripts.get_earnings_transcript("NVDA")
     assert res["source"] == "8k"
     assert res["text"] == "press release text"
@@ -37,7 +51,11 @@ def test_unavailable_raises(monkeypatch):
 
 def test_truncation(monkeypatch):
     big = "x" * 500_000
-    monkeypatch.setattr(transcripts, "_from_alphavantage", lambda t, q: {"source": "alphavantage", "text": big, "quarter": "Q1-2025"})
+    monkeypatch.setattr(
+        transcripts,
+        "_from_alphavantage",
+        lambda t, q: {"source": "alphavantage", "text": big, "quarter": "Q1-2025"},
+    )
     res = transcripts.get_earnings_transcript("NVDA")
     assert len(res["text"]) == transcripts._MAX_TRANSCRIPT_CHARS
 
@@ -48,7 +66,11 @@ def test_source_error_is_swallowed(monkeypatch):
 
     monkeypatch.setattr(transcripts, "_from_alphavantage", boom)
     monkeypatch.setattr(transcripts, "_from_ir", lambda t, q: None)
-    monkeypatch.setattr(transcripts, "_from_8k", lambda t, q, before=None: {"source": "8k", "text": "ok text", "quarter": "Q2-2025"})
+    monkeypatch.setattr(
+        transcripts,
+        "_from_8k",
+        lambda t, q, before=None: {"source": "8k", "text": "ok text", "quarter": "Q2-2025"},
+    )
     res = transcripts.get_earnings_transcript("NVDA")
     assert res["source"] == "8k"
 
@@ -67,10 +89,19 @@ def test_infer_quarter():
 def test_from_8k_selects_item_202(monkeypatch):
     monkeypatch.setattr(edgar, "ticker_to_cik", lambda t: "0001045810")
     filings = [
-        Filing(accession_number="0001-24-001", form_type="8-K", filing_date="2025-08-28",
-               item_numbers="5.02,9.01"),  # not earnings
-        Filing(accession_number="0001-24-002", form_type="8-K", filing_date="2025-08-27",
-               item_numbers="2.02,9.01", report_date="2025-07-31"),  # earnings
+        Filing(
+            accession_number="0001-24-001",
+            form_type="8-K",
+            filing_date="2025-08-28",
+            item_numbers="5.02,9.01",
+        ),  # not earnings
+        Filing(
+            accession_number="0001-24-002",
+            form_type="8-K",
+            filing_date="2025-08-27",
+            item_numbers="2.02,9.01",
+            report_date="2025-07-31",
+        ),  # earnings
     ]
     monkeypatch.setattr(edgar, "get_recent_filings", lambda cik, form, limit=40: filings)
     exhibit = "Prepared remarks: revenue grew 56% year over year to a record. " * 10
@@ -84,8 +115,13 @@ def test_from_8k_selects_item_202(monkeypatch):
 def test_from_8k_point_in_time_filter(monkeypatch):
     monkeypatch.setattr(edgar, "ticker_to_cik", lambda t: "0001045810")
     filings = [
-        Filing(accession_number="a", form_type="8-K", filing_date="2025-08-27",
-               item_numbers="2.02", report_date="2025-07-31"),
+        Filing(
+            accession_number="a",
+            form_type="8-K",
+            filing_date="2025-08-27",
+            item_numbers="2.02",
+            report_date="2025-07-31",
+        ),
     ]
     monkeypatch.setattr(edgar, "get_recent_filings", lambda cik, form, limit=40: filings)
     monkeypatch.setattr(edgar, "fetch_filing_exhibit", lambda cik, f, prefer="EX-99": "text")
@@ -109,7 +145,8 @@ def test_management_prefetch_block(monkeypatch):
     from stock_agents.tools.handlers import ToolContext
 
     monkeypatch.setattr(
-        transcripts, "get_earnings_transcript",
+        transcripts,
+        "get_earnings_transcript",
         lambda t, before=None: {"source": "8k", "text": "Evasive Q&A here.", "quarter": "Q3-2025"},
     )
     block = management._fetch_transcript_block("NVDA", ToolContext())

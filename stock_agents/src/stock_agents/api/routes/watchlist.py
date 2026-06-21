@@ -21,9 +21,14 @@ def _view(w) -> WatchlistView:
     if row:
         cur = row.conviction
     return WatchlistView(
-        ticker=w.ticker, status=w.status, entry_conviction=w.entry_conviction,
-        current_conviction=cur, delta=(round(cur - w.entry_conviction, 1) if cur is not None else None),
-        entry_price=w.entry_price, notes=w.notes, added_at=w.added_at,
+        ticker=w.ticker,
+        status=w.status,
+        entry_conviction=w.entry_conviction,
+        current_conviction=cur,
+        delta=(round(cur - w.entry_conviction, 1) if cur is not None else None),
+        entry_price=w.entry_price,
+        notes=w.notes,
+        added_at=w.added_at,
     )
 
 
@@ -33,14 +38,18 @@ def list_watchlist() -> list[WatchlistView]:
 
 
 @router.post("", status_code=201)
-def add_watchlist(body: AddWatchlistBody, background: BackgroundTasks) -> WatchlistView | RunIdResponse:
+def add_watchlist(
+    body: AddWatchlistBody, background: BackgroundTasks
+) -> WatchlistView | RunIdResponse:
     from stock_agents import track as tracking
 
     if body.thesis_path:
         try:
             entry = tracking.track_add(
-                body.ticker, thesis_path=body.thesis_path,
-                entry_price=body.entry_price, note=body.notes,
+                body.ticker,
+                thesis_path=body.thesis_path,
+                entry_price=body.entry_price,
+                note=body.notes,
             )
         except Exception as exc:  # noqa: BLE001
             raise HTTPException(400, str(exc)) from exc
@@ -73,9 +82,13 @@ def history(ticker: str) -> list[SnapshotView]:
     rows = store.list_snapshot_rows(ticker)
     return [
         SnapshotView(
-            id=r.id, taken_at=r.taken_at, conviction=r.conviction,
-            fundamentals_score=r.fundamentals_score, balance_sheet_score=r.balance_sheet_score,
-            management_score=r.management_score, stress_test_score=r.stress_test_score,
+            id=r.id,
+            taken_at=r.taken_at,
+            conviction=r.conviction,
+            fundamentals_score=r.fundamentals_score,
+            balance_sheet_score=r.balance_sheet_score,
+            management_score=r.management_score,
+            stress_test_score=r.stress_test_score,
             run_id=r.run_id,
         )
         for r in rows

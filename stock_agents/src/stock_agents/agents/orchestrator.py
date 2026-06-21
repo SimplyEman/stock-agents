@@ -138,9 +138,13 @@ def analyze_single_detailed(
         errs = [r.error for r in (f_res, b_res, m_res) if r.error]
         _emit(progress, stage="analyst_failed", ticker=ticker, errors=errs)
         return CandidateAnalysis(
-            ticker=ticker, thesis=None,
-            fundamentals=f_res.output, balance_sheet=b_res.output, management=m_res.output,
-            cost_usd=cost, error="; ".join(str(e) for e in errs) or "analyst failure",
+            ticker=ticker,
+            thesis=None,
+            fundamentals=f_res.output,
+            balance_sheet=b_res.output,
+            management=m_res.output,
+            cost_usd=cost,
+            error="; ".join(str(e) for e in errs) or "analyst failure",
         )
 
     # Forensic agent (addendum): after balance sheet, before stress test, when enabled.
@@ -153,21 +157,32 @@ def analyze_single_detailed(
         cost += fo_res.cost_usd
         forensic_report = fo_res.output
         if forensic_report:
-            _emit(progress, stage="forensic_done", ticker=ticker,
-                  forensic_risk=forensic_report.forensic_risk_score_1_to_10)
+            _emit(
+                progress,
+                stage="forensic_done",
+                ticker=ticker,
+                forensic_risk=forensic_report.forensic_risk_score_1_to_10,
+            )
 
     # Stress test depends on the first three (+ forensic findings when present).
     s_res = stress_test.run(
-        ticker, [f_res.output, b_res.output, m_res.output],
-        forensic_report=forensic_report, ctx=ctx,
+        ticker,
+        [f_res.output, b_res.output, m_res.output],
+        forensic_report=forensic_report,
+        ctx=ctx,
     )
     cost += s_res.cost_usd
     if not s_res.output:
         _emit(progress, stage="analyst_failed", ticker=ticker, errors=[s_res.error])
         return CandidateAnalysis(
-            ticker=ticker, thesis=None,
-            fundamentals=f_res.output, balance_sheet=b_res.output, management=m_res.output,
-            forensic=forensic_report, cost_usd=cost, error=s_res.error or "stress test failure",
+            ticker=ticker,
+            thesis=None,
+            fundamentals=f_res.output,
+            balance_sheet=b_res.output,
+            management=m_res.output,
+            forensic=forensic_report,
+            cost_usd=cost,
+            error=s_res.error or "stress test failure",
         )
 
     # Peer comparison: after stress test, before synthesis (v2 Phase 2). Non-fatal
@@ -177,17 +192,27 @@ def analyze_single_detailed(
     peer_report = p_res.output
 
     syn_res = synthesizer.run(
-        ticker, [f_res.output, b_res.output, m_res.output, s_res.output],
-        peer_report=peer_report, macro=macro, forensic_report=forensic_report, ctx=ctx,
+        ticker,
+        [f_res.output, b_res.output, m_res.output, s_res.output],
+        peer_report=peer_report,
+        macro=macro,
+        forensic_report=forensic_report,
+        ctx=ctx,
     )
     cost += syn_res.cost_usd
     if not syn_res.output:
         _emit(progress, stage="analyst_failed", ticker=ticker, errors=[syn_res.error])
         return CandidateAnalysis(
-            ticker=ticker, thesis=None,
-            fundamentals=f_res.output, balance_sheet=b_res.output, management=m_res.output,
-            stress_test=s_res.output, peer_comparison=peer_report, forensic=forensic_report,
-            cost_usd=cost, error=syn_res.error or "synthesis failure",
+            ticker=ticker,
+            thesis=None,
+            fundamentals=f_res.output,
+            balance_sheet=b_res.output,
+            management=m_res.output,
+            stress_test=s_res.output,
+            peer_comparison=peer_report,
+            forensic=forensic_report,
+            cost_usd=cost,
+            error=syn_res.error or "synthesis failure",
         )
 
     thesis = syn_res.output
@@ -201,17 +226,24 @@ def analyze_single_detailed(
     if forensic_report is not None:
         thesis.forensic_risk_score = forensic_report.forensic_risk_score_1_to_10
         score, label = synthesizer.compute_conviction(
-            thesis.fundamentals_score, thesis.balance_sheet_score,
-            thesis.management_score, thesis.stress_test_score,
+            thesis.fundamentals_score,
+            thesis.balance_sheet_score,
+            thesis.management_score,
+            thesis.stress_test_score,
             forensic_risk=forensic_report.forensic_risk_score_1_to_10,
         )
         thesis.conviction_score, thesis.conviction_label = score, label
     _emit(progress, stage="analyst_done", ticker=ticker, conviction=thesis.conviction_score)
     return CandidateAnalysis(
-        ticker=ticker, thesis=thesis,
-        fundamentals=f_res.output, balance_sheet=b_res.output,
-        management=m_res.output, stress_test=s_res.output, peer_comparison=peer_report,
-        forensic=forensic_report, cost_usd=cost,
+        ticker=ticker,
+        thesis=thesis,
+        fundamentals=f_res.output,
+        balance_sheet=b_res.output,
+        management=m_res.output,
+        stress_test=s_res.output,
+        peer_comparison=peer_report,
+        forensic=forensic_report,
+        cost_usd=cost,
     )
 
 
@@ -224,7 +256,9 @@ def analyze_single(
     tracker: _CostTracker | None = None,
     progress: ProgressCb | None = None,
 ) -> InvestmentThesis | None:
-    result = analyze_single_detailed(candidate, ctx=ctx, macro=macro, forensic=forensic, progress=progress)
+    result = analyze_single_detailed(
+        candidate, ctx=ctx, macro=macro, forensic=forensic, progress=progress
+    )
     if tracker:
         tracker.add(result.cost_usd)
     return result.thesis
@@ -333,8 +367,12 @@ def analyze_theme(
             (kept if was_investable_on(c.ticker, ctx.as_of) else dropped).append(c)
         pool_candidates = kept
         if dropped:
-            _emit(progress, stage="universe_filtered", as_of=ctx.as_of,
-                  excluded=[c.ticker for c in dropped])
+            _emit(
+                progress,
+                stage="universe_filtered",
+                as_of=ctx.as_of,
+                excluded=[c.ticker for c in dropped],
+            )
 
     # 2c. Asymmetric market-cap / price filter (addendum). Hard-drop out-of-band
     # names so mega-caps can't crowd the list, regardless of what the LLM picked.
@@ -345,7 +383,9 @@ def analyze_theme(
         kept_t, excl = _etf.filter_candidates([c.ticker for c in pool_candidates], asym)
         kept_set = set(kept_t)
         pool_candidates = [c for c in pool_candidates if c.ticker in kept_set]
-        excl_counts = "; ".join(f"{reason}: {len(t)} ({', '.join(t)})" for reason, t in excl.items())
+        excl_counts = "; ".join(
+            f"{reason}: {len(t)} ({', '.join(t)})" for reason, t in excl.items()
+        )
         filter_note = (
             f"Asymmetric filter [{asym.describe()}] — excluded {sum(len(t) for t in excl.values())} "
             f"candidate(s){': ' + excl_counts if excl_counts else ''}."
@@ -353,8 +393,7 @@ def analyze_theme(
         _emit(progress, stage="asym_filtered", note=filter_note)
 
     selected = pool_candidates[:max_candidates]
-    _emit(progress, stage="screened", count=len(selected),
-          tickers=[c.ticker for c in selected])
+    _emit(progress, stage="screened", count=len(selected), tickers=[c.ticker for c in selected])
 
     # 3. Analyze candidates in parallel (4 workers), honoring the budget guard.
     theses: list[InvestmentThesis] = []
@@ -364,10 +403,17 @@ def analyze_theme(
             if tracker.over_budget:
                 _emit(progress, stage="budget_abort", spent=tracker.total)
                 break
-            futures[pool.submit(
-                analyze_single, c, ctx=ctx, macro=macro, forensic=forensic,
-                tracker=tracker, progress=progress,
-            )] = c
+            futures[
+                pool.submit(
+                    analyze_single,
+                    c,
+                    ctx=ctx,
+                    macro=macro,
+                    forensic=forensic,
+                    tracker=tracker,
+                    progress=progress,
+                )
+            ] = c
         for fut in as_completed(futures):
             thesis = fut.result()
             if thesis:
@@ -400,25 +446,37 @@ def _candidate_for(ticker: str) -> Candidate:
     try:
         p = fmp.get_company_profile(ticker)
         return Candidate(
-            ticker=ticker.upper(), name=p.name, market_cap_usd=p.market_cap_usd,
-            sector=p.sector, industry=p.industry,
+            ticker=ticker.upper(),
+            name=p.name,
+            market_cap_usd=p.market_cap_usd,
+            sector=p.sector,
+            industry=p.industry,
         )
     except Exception:
-        return Candidate(ticker=ticker.upper(), name=ticker.upper(), market_cap_usd=0.0,
-                         sector="", industry="")
+        return Candidate(
+            ticker=ticker.upper(), name=ticker.upper(), market_cap_usd=0.0, sector="", industry=""
+        )
 
 
 def analyze_ticker_detailed(
-    ticker: str, *, ctx: ToolContext | None = None, forensic: bool = False,
+    ticker: str,
+    *,
+    ctx: ToolContext | None = None,
+    forensic: bool = False,
     progress: ProgressCb | None = None,
 ) -> CandidateAnalysis:
     """Run the analyst pipeline on one ticker, returning thesis + reports + cost.
     Used by the tracking layer (track-status) to snapshot the analyst reports."""
-    return analyze_single_detailed(_candidate_for(ticker), ctx=ctx, forensic=forensic, progress=progress)
+    return analyze_single_detailed(
+        _candidate_for(ticker), ctx=ctx, forensic=forensic, progress=progress
+    )
 
 
 def analyze_ticker(
-    ticker: str, *, ctx: ToolContext | None = None, forensic: bool = False,
+    ticker: str,
+    *,
+    ctx: ToolContext | None = None,
+    forensic: bool = False,
     progress: ProgressCb | None = None,
 ) -> InvestmentThesis | None:
     """Run the analyst pipeline on a single user-specified ticker (CLI `inspect`)."""

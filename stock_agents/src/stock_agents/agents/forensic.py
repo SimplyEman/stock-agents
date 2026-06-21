@@ -91,7 +91,9 @@ Be calibrated. Most companies score 3-5. A 1 should be rare (genuinely pristine 
 
 def _citation_accessions(report: ForensicReport) -> dict[str, list[str]]:
     """Map each finding to the accession numbers in its citation."""
-    return {f.finding[:40]: extract_accessions(f.citation, f.source_url or "") for f in report.findings}
+    return {
+        f.finding[:40]: extract_accessions(f.citation, f.source_url or "") for f in report.findings
+    }
 
 
 def _invalid_findings(report: ForensicReport, seen: set[str]) -> list[str]:
@@ -118,8 +120,14 @@ def run(ticker: str, *, ctx: ToolContext | None = None) -> AgentResult:
         f"Run the forensic checklist on {ticker.upper()}. Cite a fetched filing's "
         "accession number for every finding. Return a ForensicReport."
     )
-    result = runner.run(system=SYSTEM, user_message=base_msg, output_schema=ForensicReport,
-                        ctx=ctx, ticker=ticker.upper(), max_iters=16)
+    result = runner.run(
+        system=SYSTEM,
+        user_message=base_msg,
+        output_schema=ForensicReport,
+        ctx=ctx,
+        ticker=ticker.upper(),
+        max_iters=16,
+    )
 
     if not isinstance(result.output, ForensicReport):
         return result
@@ -130,14 +138,19 @@ def run(ticker: str, *, ctx: ToolContext | None = None) -> AgentResult:
         # Anti-hallucination: re-run once, instructing the agent to drop findings
         # whose citations don't trace to a filing it actually fetched.
         correction = (
-            base_msg
-            + "\n\nYour previous attempt cited accession numbers that were not in any "
+            base_msg + "\n\nYour previous attempt cited accession numbers that were not in any "
             "filing you fetched, or omitted citations. Re-do it: every finding must cite "
             "the accession number of a filing you actually retrieve with a tool in this run. "
             "Drop any finding you cannot back with a fetched filing."
         )
-        retry = runner.run(system=SYSTEM, user_message=correction, output_schema=ForensicReport,
-                           ctx=ctx, ticker=ticker.upper(), max_iters=16)
+        retry = runner.run(
+            system=SYSTEM,
+            user_message=correction,
+            output_schema=ForensicReport,
+            ctx=ctx,
+            ticker=ticker.upper(),
+            max_iters=16,
+        )
         if isinstance(retry.output, ForensicReport):
             retry.cost_usd += result.cost_usd
             seen2 = {a for e in retry.audit_log for a in e.get("accessions", [])}

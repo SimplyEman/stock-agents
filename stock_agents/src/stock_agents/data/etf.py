@@ -109,7 +109,14 @@ def _scrape_ishares(etf: str) -> ETFHoldings:
     text = _get_text(url)
     # iShares CSVs carry a preamble before the real header row "Ticker,Name,...".
     lines = text.splitlines()
-    start = next((i for i, ln in enumerate(lines) if ln.lower().startswith('"ticker"') or ln.lower().startswith("ticker")), 0)
+    start = next(
+        (
+            i
+            for i, ln in enumerate(lines)
+            if ln.lower().startswith('"ticker"') or ln.lower().startswith("ticker")
+        ),
+        0,
+    )
     reader = csv.DictReader(io.StringIO("\n".join(lines[start:])))
     holdings: list[ETFHolding] = []
     for row in reader:
@@ -211,16 +218,22 @@ class AsymmetricFilter:
 
     @property
     def active(self) -> bool:
-        return any(v is not None for v in (
-            self.min_cap_usd, self.max_cap_usd, self.max_price_usd, self.max_12m_return_pct,
-        ))
+        return any(
+            v is not None
+            for v in (
+                self.min_cap_usd,
+                self.max_cap_usd,
+                self.max_price_usd,
+                self.max_12m_return_pct,
+            )
+        )
 
     def describe(self) -> str:
         parts = []
         if self.min_cap_usd is not None:
-            parts.append(f"market cap >= ${self.min_cap_usd/1e9:.2f}B")
+            parts.append(f"market cap >= ${self.min_cap_usd / 1e9:.2f}B")
         if self.max_cap_usd is not None:
-            parts.append(f"market cap <= ${self.max_cap_usd/1e9:.2f}B")
+            parts.append(f"market cap <= ${self.max_cap_usd / 1e9:.2f}B")
         if self.max_price_usd is not None:
             parts.append(f"share price <= ${self.max_price_usd:.2f}")
         if self.max_12m_return_pct is not None:
@@ -246,9 +259,15 @@ def build_filter(
     """
     from stock_agents.data import fmp
 
-    if all(v is None for v in (
-        min_market_cap_gbp, max_market_cap_gbp, max_price_gbp, max_12m_return_pct,
-    )):
+    if all(
+        v is None
+        for v in (
+            min_market_cap_gbp,
+            max_market_cap_gbp,
+            max_price_gbp,
+            max_12m_return_pct,
+        )
+    ):
         return None
     currency = (currency or "gbp").lower()
     rate = fmp.get_fx_rate("GBPUSD") or 1.27 if currency == "gbp" else 1.0
@@ -270,7 +289,9 @@ def build_filter(
     )
 
 
-def filter_candidates(tickers: list[str], filt: AsymmetricFilter) -> tuple[list[str], dict[str, list[str]]]:
+def filter_candidates(
+    tickers: list[str], filt: AsymmetricFilter
+) -> tuple[list[str], dict[str, list[str]]]:
     """Split tickers into (kept, exclusions-by-reason) per the asymmetric filter.
 
     Market caps and prices come from FMP (USD), cached. Tickers whose data can't
@@ -283,7 +304,10 @@ def filter_candidates(tickers: list[str], filt: AsymmetricFilter) -> tuple[list[
         return tickers, {}
     kept: list[str] = []
     excluded: dict[str, list[str]] = {
-        "too_large": [], "too_small": [], "too_expensive": [], "ran_too_hot": [],
+        "too_large": [],
+        "too_small": [],
+        "too_expensive": [],
+        "ran_too_hot": [],
     }
     for t in tickers:
         try:

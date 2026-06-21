@@ -41,23 +41,33 @@ class JobSpec:
 
 JOBS: dict[str, JobSpec] = {
     "post_earnings": JobSpec(
-        "post_earnings", post_earnings.run, "0 6 * * *",
+        "post_earnings",
+        post_earnings.run,
+        "0 6 * * *",
         "Re-analyze watchlist tickers that reported in the last 24h (daily 06:00)",
     ),
     "eight_k_monitor": JobSpec(
-        "eight_k_monitor", eight_k_monitor.run, "*/30 * * * *",
+        "eight_k_monitor",
+        eight_k_monitor.run,
+        "*/30 * * * *",
         "Watch EDGAR 8-K feed for watchlist tickers (every 30 min)",
     ),
     "weekly_cache_warm": JobSpec(
-        "weekly_cache_warm", weekly_cache_warm.run, "0 2 * * 0",
+        "weekly_cache_warm",
+        weekly_cache_warm.run,
+        "0 2 * * 0",
         "Refresh fundamentals/filings/ETF caches (Sundays 02:00)",
     ),
     "sunday_batch": JobSpec(
-        "sunday_batch", sunday_batch.run, "0 4 * * 0",
+        "sunday_batch",
+        sunday_batch.run,
+        "0 4 * * 0",
         "Run the weekly batch theme analyses + digest (Sundays 04:00)",
     ),
     "quarterly_retest": JobSpec(
-        "quarterly_retest", quarterly_retest.run, "0 4 1 1,4,7,10 *",
+        "quarterly_retest",
+        quarterly_retest.run,
+        "0 4 1 1,4,7,10 *",
         "Retest every portfolio manifest under data/portfolios/ (Jan/Apr/Jul/Oct 1, 04:00)",
     ),
 }
@@ -88,7 +98,8 @@ def run_job(name: str, **kwargs) -> dict:
         from stock_agents import notify
 
         notify.emit_alert(
-            kind="run_failure", severity="important",
+            kind="run_failure",
+            severity="important",
             subject=f"[job:{name}] failed",
             short=f"Scheduled job {name} failed: {exc}"[:240],
             html=f"<h3>Job {name} failed</h3><pre>{exc}</pre>",
@@ -131,8 +142,12 @@ def build_scheduler():
     scheduler = BlockingScheduler()
     for spec in JOBS.values():
         scheduler.add_job(
-            run_job, CronTrigger.from_crontab(spec.cron), args=[spec.name],
-            id=spec.name, name=spec.description, replace_existing=True,
+            run_job,
+            CronTrigger.from_crontab(spec.cron),
+            args=[spec.name],
+            id=spec.name,
+            name=spec.description,
+            replace_existing=True,
         )
     return scheduler
 
