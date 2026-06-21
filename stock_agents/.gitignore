@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+
+# Env / secrets
+.env
+.env.local
+
+# Caches
+.cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# Run artifacts
+audit_logs/
+*.report.json
+reports/
+
+# v2 workstation state (SQLite DB + thesis snapshots).
+# Anchored so it only matches the runtime data dir, NOT the source data layer
+# at src/stock_agents/data/ (which must be committed).
+/data/
+
+# v2 automation (generated crontab snippet has machine-specific paths; runtime log)
+src/stock_agents/automation/cron.sh
+**/automation/cron.log
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/

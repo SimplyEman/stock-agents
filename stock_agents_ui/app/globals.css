@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Light mode (slate-emerald accent) */
+  --background: 0 0% 100%;
+  --foreground: 222 20% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 20% 11%;
+  --muted: 210 16% 96%;
+  --muted-foreground: 215 14% 42%;
+  --accent: 160 84% 39%;
+  --accent-foreground: 0 0% 100%;
+  --primary: 222 47% 31%;
+  --primary-foreground: 0 0% 100%;
+  --border: 214 18% 88%;
+  --input: 214 18% 88%;
+}
+
+.dark {
+  /* Dark mode default */
+  --background: 222 24% 8%;
+  --foreground: 210 20% 92%;
+  --card: 222 22% 11%;
+  --card-foreground: 210 20% 92%;
+  --muted: 217 19% 16%;
+  --muted-foreground: 215 16% 60%;
+  --accent: 160 70% 45%;
+  --accent-foreground: 222 24% 8%;
+  --primary: 213 90% 62%;
+  --primary-foreground: 222 24% 8%;
+  --border: 217 19% 20%;
+  --input: 217 19% 20%;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-feature-settings: "rlig" 1, "calt" 1;
+}
+
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}

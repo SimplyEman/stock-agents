@@ -1,0 +1,58 @@
+# ===========================================================================
+# Root .gitignore for the public repo. Protects secrets and excludes large
+# generated artifacts. Nested .gitignore files in stock_agents/ and
+# stock_agents_ui/ still apply within those subtrees.
+# ===========================================================================
+
+# --- Secrets (NEVER commit) ---
+.env
+.env.*
+!.env.example
+!.env.local.example
+*.key
+*.pem
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+
+# --- Node / Next.js ---
+node_modules/
+.next/
+out/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- Caches & coverage ---
+.cache/
+.cache_test/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# --- Run artifacts / local state ---
+# NOTE: anchored to the runtime data dir only. Do NOT use a bare `data/`,
+# which would also ignore the source layer at src/stock_agents/data/.
+audit_logs/
+reports/
+*.report.json
+/stock_agents/data/           # runtime SQLite DB + thesis snapshots
+/stock_agents/reports/
+
+# --- Automation (machine-specific generated paths) ---
+**/automation/cron.sh
+**/automation/cron.log
+
+# --- OS / editor ---
+.DS_Store
+.idea/
+.vscode/
