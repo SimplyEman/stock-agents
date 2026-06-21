@@ -90,6 +90,8 @@ dollars.
 
 ## Documentation
 
-- [`stock_agents/README.md`](stock_agents/README.md) — full architecture, agents, calibration, and results.
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — **how the pipeline works and the *why* behind each agent.** Start here.
+- [`docs/WALKTHROUGH.md`](docs/WALKTHROUGH.md) — annotated walkthrough of a real run (+ a Loom recording script).
+- [`stock_agents/README.md`](stock_agents/README.md) — usage reference, calibration, and results.
 - [`CLAUDE.md`](CLAUDE.md) — engineering guide and conventions.
 - [`V2_BUILD_SPEC.md`](V2_BUILD_SPEC.md) / [`V2_ADDENDUM_FORENSIC.md`](V2_ADDENDUM_FORENSIC.md) — v2 design.
